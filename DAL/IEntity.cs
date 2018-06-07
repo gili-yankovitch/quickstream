@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using M
 
 namespace DAL
 {
-    public class NamespaceCreator
-    {
-		new SQLiteConnection
-    }
+	interface IEntity
+	{
+		uint Id { get; set; }
+	}
 }
