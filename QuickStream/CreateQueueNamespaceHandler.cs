@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,20 +14,30 @@ namespace QuickStream
 
 		public int StatusCode => 200;
 
-		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Uri uri)
+		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Url url)
 		{
-			string rsp_body = "";
+			var rspBody = new StringBuilder();
+			rspBody.Append("METHOD: ");
+			rspBody.Append(request.HttpMethod);
+			rspBody.Append("\n");
 
-			rsp_body += "METHOD: " + request.HttpMethod + "\n";
-			rsp_body += "URI Path: " + request.Url.AbsolutePath + "\n";
-			rsp_body += "Headers:\n";
 
-			foreach (string header in request.Headers.AllKeys)
+			rspBody.Append("URI Path: ");
+			rspBody.Append(request.Url.AbsolutePath);
+			rspBody.Append("\n");
+
+			rspBody.Append("Headers:\n");
+
+			foreach (var header in request.Headers.AllKeys)
 			{
-				rsp_body += "\t" + header + ": " + request.Headers[header] + "\n";
+				rspBody.Append("\t");
+				rspBody.Append(header);
+				rspBody.Append(": ");
+				rspBody.Append(request.Headers[header]);
+				rspBody.Append("\n");
 			}
 
-			byte[] rsp = Encoding.ASCII.GetBytes(rsp_body);
+			var rsp = Encoding.ASCII.GetBytes(rspBody.ToString());
 			response.OutputStream.Write(rsp, 0, rsp.Length);
 		}
 	}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,45 +12,6 @@ namespace QuickStream
 {
     class Program
     {
-	    static void InitializeTestDb(MessagingContext context)
-	    {
-		    context.Set<User>().Add(new User
-		    {
-			    Id = 0,
-			    Key = Encoding.ASCII.GetBytes("00010203040506070809")
-		    });
-
-		    context.Set<Message>().Add(new Message
-		    {
-				Id = 0,
-			    Content = Encoding.ASCII.GetBytes("Hello, world!")
-			});
-
-		    context.Set<MsgQueue>().Add(new MsgQueue
-		    {
-				Id = 0,
-				Messages = new List<Message>
-				{
-					context.Set<Message>().First()
-				},
-				Name = "First Queue",
-				Readers = new List<User>
-				{
-					context.Set<User>().First()
-				}
-		    });
-
-		    context.Set<Namespace>().Add(new Namespace
-		    {
-				Id = 0,
-				Owner = context.Set<User>().First(),
-				Queues = new List<MsgQueue>
-				{
-					context.Set<MsgQueue>().First()
-				}
-		    });
-	    }
-
         static void Main(string[] args)
         {
 			ushort port = 8080;
@@ -68,7 +30,47 @@ namespace QuickStream
 				}
 			}
 
-	        InitializeTestDb(new MessagingContext());
+	        using (MessagingContext ctx = new MessagingContext())
+	        {
+				Message m = new Message
+		        {
+			        Content = Encoding.ASCII.GetBytes("Hello, world!")
+		        };
+
+		        MsgQueue mq0 = new MsgQueue
+		        {
+			        Messages = new List<Message>
+			        {
+				        m
+			        },
+			        Name = "My First Real Queue",
+			        Readers = new List<User>()
+		        };
+
+		        MsgQueue mq1 = new MsgQueue
+		        {
+			        Name = "Second Queue",
+			        Readers = new List<User>()
+		        };
+
+		        User u = new User
+		        {
+			        Key = Encoding.ASCII.GetBytes("00010203040506070809"),
+			        Queues = new List<MsgQueue>()
+			        {
+				        mq0, mq1
+			        }
+		        };
+
+		        mq0.Readers.Add(u);
+
+		        ctx.MsgQueues.Add(mq0);
+		        ctx.MsgQueues.Add(mq1);
+		        ctx.Users.Add(u);
+		        ctx.Messages.Add(m);
+
+				ctx.SaveChanges();
+	        }
 
 			try
 			{

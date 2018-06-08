@@ -8,6 +8,6 @@ namespace DAL
 {
 	interface IEntity
 	{
-		uint Id { get; set; }
+		int Id { get; set; }
 	}
 }

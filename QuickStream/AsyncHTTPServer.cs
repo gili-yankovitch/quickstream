@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,17 +69,17 @@ namespace QuickStream
 		private void HandleRequest(HttpListenerContext context)
 		{
 			/* Find the best-fit for the given URI */
-			IServable handler = this.m_404Handler;
-			string subset_uri = context.Request.RawUrl.ToString().TrimEnd('/');
-			string[] request_uri = subset_uri.Split('/');
+			var handler = this.m_404Handler;
+			var subsetUri = context.Request.RawUrl.TrimEnd('/');
+			var requestUri = subsetUri.Split('/');
 
-			for (int i = request_uri.Length - 1; i > 0; --i)
+			for (var i = requestUri.Length - 1; i > 0; --i)
 			{
-				subset_uri = String.Join("/", request_uri.Take(i + 1));
+				subsetUri = string.Join("/", requestUri.Take(i + 1));
 
-				if (this.m_handlers.ContainsKey(subset_uri))
+				if (this.m_handlers.ContainsKey(subsetUri))
 				{
-					handler = this.m_handlers[subset_uri];
+					handler = this.m_handlers[subsetUri];
 
 					/* Finish up here */
 					break;
@@ -88,12 +89,12 @@ namespace QuickStream
 			context.Response.SendChunked = true;
 			try
 			{
-				handler.Serve(context.Request, context.Response, new Uri(context.Request.Url.ToString().Substring(subset_uri.Length)));
+				handler.Serve(context.Request, context.Response, new Url(context.Request.Url.ToString().Substring(subsetUri.Length)));
 				context.Response.StatusCode = handler.StatusCode;
 			}
 			catch (Exception)
 			{
-				this.m_500Handler.Serve(context.Request, context.Response, new Uri(context.Request.Url.ToString().Substring(subset_uri.Length)));
+				this.m_500Handler.Serve(context.Request, context.Response, new Url(context.Request.Url.ToString().Substring(subsetUri.Length)));
 				context.Response.StatusCode = this.m_500Handler.StatusCode;
 			}
 			

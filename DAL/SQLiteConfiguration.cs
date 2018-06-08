@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace DAL
 {
-	class SqliteConfiguration : DbConfiguration
+	public class SqliteConfiguration : DbConfiguration
 	{
 		public SqliteConfiguration()
 		{
 			SetProviderFactory("System.Data.SQLite", SQLiteFactory.Instance);
 			SetProviderFactory("System.Data.SQLite.EF6", SQLiteProviderFactory.Instance);
 			SetProviderServices("System.Data.SQLite",
-				(DbProviderServices) SQLiteProviderFactory.Instance.GetService(typeof(DbProviderServices)));
+				(DbProviderServices)SQLiteProviderFactory.Instance.GetService(typeof(DbProviderServices)));
 		}
 	}
 }

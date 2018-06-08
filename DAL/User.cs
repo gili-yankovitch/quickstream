@@ -8,12 +8,14 @@ using SQLite.CodeFirst;
 
 namespace DAL
 {
-	public class User
+	public class User : IEntity
 	{
 		[Autoincrement]
 		[Key]
-		public uint Id { get; set; }
+		public int Id { get; set; }
 
 		public byte[] Key { get; set; }
+
+		public List<MsgQueue> Queues { get; set; }
 	}
 }

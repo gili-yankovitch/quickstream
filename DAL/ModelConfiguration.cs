@@ -13,7 +13,6 @@ namespace DAL
 		{
 			modelBuilder.Entity<Message>().ToTable("Messages");
 			modelBuilder.Entity<MsgQueue>().ToTable("Queues");
-			modelBuilder.Entity<Namespace>().ToTable("Namespaces");
 			modelBuilder.Entity<User>().ToTable("Users");
 		}
 	}
