@@ -13,6 +13,6 @@ namespace QuickStream
 		string ContentType { get; }
 		int StatusCode { get; }
 
-		void Serve(HttpListenerRequest request, HttpListenerResponse response, Url uri);
+		void Serve(HttpListenerRequest request, HttpListenerResponse response, Url url);
 	}
 }

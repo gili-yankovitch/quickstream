@@ -92,7 +92,7 @@ namespace QuickStream
 				handler.Serve(context.Request, context.Response, new Url(context.Request.Url.ToString().Substring(subsetUri.Length)));
 				context.Response.StatusCode = handler.StatusCode;
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
 				this.m_500Handler.Serve(context.Request, context.Response, new Url(context.Request.Url.ToString().Substring(subsetUri.Length)));
 				context.Response.StatusCode = this.m_500Handler.StatusCode;

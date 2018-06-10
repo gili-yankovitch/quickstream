@@ -14,7 +14,7 @@ namespace QuickStream
 
 		public int StatusCode => 500;
 
-		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Url uri)
+		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Url url)
 		{
 			string rsp_body = "Internal Server Error.";
 

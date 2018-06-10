@@ -75,7 +75,8 @@ namespace QuickStream
 			try
 			{
 				AsyncHTTPServer server = new AsyncHTTPServer(port);
-				server.AddHandler("/createQueueNamespace", new CreateQueueNamespaceHandler());
+				server.AddHandler("/testQuery", new TestQueryHandler());
+				server.AddHandler("/createUser", new CreateUserHandler());
 
 				server.Start();
 			}

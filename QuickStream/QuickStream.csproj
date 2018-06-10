@@ -43,11 +43,18 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncHTTPServer.cs" />
+    <Compile Include="CreateUserHandler.cs" />
     <Compile Include="Error500Handler.cs" />
-    <Compile Include="CreateQueueNamespaceHandler.cs" />
+    <Compile Include="HTTPUtils.cs" />
+    <Compile Include="JSON\JSONApi.cs" />
+    <Compile Include="JSON\UserCreateRequest.cs" />
+    <Compile Include="JSON\UserCreateResponse.cs" />
+    <Compile Include="TestQueryHandler.cs" />
     <Compile Include="Error404Handler.cs" />
     <Compile Include="IServable.cs" />
     <Compile Include="Program.cs" />

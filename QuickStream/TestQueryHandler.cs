@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace QuickStream
 {
-	public class CreateQueueNamespaceHandler : IServable
+	public class TestQueryHandler : IServable
 	{
 		public string ContentType => "text/plain";
 
