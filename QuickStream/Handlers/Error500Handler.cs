@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Security.Policy;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace QuickStream
+namespace QuickStream.Handlers
 {
 	public class Error500Handler : IServable
 	{
@@ -16,9 +12,9 @@ namespace QuickStream
 
 		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Url url)
 		{
-			string rsp_body = "Internal Server Error.";
+			var rsp_body = "Internal Server Error.";
 
-			byte[] rsp = Encoding.ASCII.GetBytes(rsp_body);
+			var rsp = Encoding.ASCII.GetBytes(rsp_body);
 			response.OutputStream.Write(rsp, 0, rsp.Length);
 		}
 	}

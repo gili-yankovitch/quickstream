@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace QuickStream
 {
-	class HttpUtils
+	internal class HttpUtils
 	{
 		private const int MAX_CHUNK = 4096;
 
@@ -31,13 +26,9 @@ namespace QuickStream
 				total += t.Result;
 
 				if (t.Result < MAX_CHUNK)
-				{
 					sg.Add(readBuf.Take(t.Result).ToArray());
-				}
 				else
-				{
 					sg.Add(readBuf);
-				}
 			}
 
 			var full = new byte[total];

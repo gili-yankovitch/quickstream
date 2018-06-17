@@ -5,10 +5,11 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuickStream.JSON
+namespace JSON
 {
 	[DataContract()]
-	public class JSONApi
+	public class JSONResponse
 	{
+		[DataMember] public bool Success;
 	}
 }

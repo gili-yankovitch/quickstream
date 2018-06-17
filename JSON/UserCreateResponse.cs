@@ -5,11 +5,11 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuickStream.JSON
+namespace JSON
 {
 	[DataContract]
-	internal class UserCreateResponse : JSONApi
+	public class UserCreateResponse : JSONResponse
 	{
-		[DataMember] internal int Id;
+		[DataMember] public int Id;
 	}
 }
