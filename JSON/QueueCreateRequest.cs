@@ -8,12 +8,10 @@ using System.Threading.Tasks;
 namespace JSON
 {
 	[DataContract]
-	public class QueueCreateRequest
+	public class QueueCreateRequest : CredentialRequest
 	{
-		[DataMember] public int Id;
-
-		[DataMember] public byte[] Key;
-
 		[DataMember] public string QueueName;
+
+		[DataMember] public List<int> Readers;
 	}
 }

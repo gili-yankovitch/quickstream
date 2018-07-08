@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text;
+using Google.Protobuf;
+using LogicServices;
 using QuickStream.Handlers;
 
 namespace QuickStream
@@ -30,6 +33,9 @@ namespace QuickStream
 				server.AddHandler("/testQuery", new TestQueryHandler());
 				server.AddHandler("/createUser", new CreateUserHandler());
 				server.AddHandler("/createQueue", new CreateQueueHandler());
+				server.AddHandler("/slaveSync", new SlaveSyncHandler());
+				server.AddHandler("/login", new LoginHandler());
+				server.AddHandler("/queue", new QueueHandler());
 
 				server.Start();
 			}
@@ -42,6 +48,7 @@ namespace QuickStream
 			catch (Exception e)
 			{
 				Console.WriteLine(e);
+				Console.WriteLine(e.Message);
 			}
 		}
 	}

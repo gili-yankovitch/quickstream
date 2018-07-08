@@ -16,6 +16,14 @@ namespace DAL
 		public int Id { get; set; }
 
 		[Required]
-		public byte[] Content { get; set; }
+		public int MsgIdx { get; set; }
+
+		[Required]
+		public string Content { get; set; }
+
+		[Required]
+		[ForeignKey("QueueId")]
+		public virtual MsgQueue Queue { get; set; }
+		public int QueueId { get; set; }
 	}
 }

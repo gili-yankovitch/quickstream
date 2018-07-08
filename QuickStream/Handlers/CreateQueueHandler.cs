@@ -18,15 +18,28 @@ namespace QuickStream.Handlers
 				(QueueCreateRequest)new DataContractJsonSerializer(typeof(QueueCreateRequest)).ReadObject(
 					request.InputStream);
 
-			var jsonResponse = new QueueCreateResponse { Success = false };
+			var jsonResponse = new BooleanResponse { Success = false };
 
-			if (UserEngine.GetInstance().Login(queueCreateRequest.Id, queueCreateRequest.Key))
+		
+			if (!UserEngine.LoginBySessionId(queueCreateRequest.Id, queueCreateRequest.SessionKey))
 			{
-				jsonResponse.Success = QueueEngine.GetInstance()
-					.CreateQueue(queueCreateRequest.Id, queueCreateRequest.QueueName);
+				jsonResponse.Message = "Login Failed";
+			}
+			else
+			{
+				try
+				{
+					QueueEngine.CreateQueue(queueCreateRequest.Id, queueCreateRequest.QueueName, queueCreateRequest.Readers);
+
+					jsonResponse.Success = true;
+				}
+				catch (Exception e)
+				{
+					jsonResponse.Message = e.Message;
+				}
 			}
 
-			new DataContractJsonSerializer(typeof(QueueCreateResponse)).WriteObject(response.OutputStream,
+			new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
 				jsonResponse);
 		}
 	}

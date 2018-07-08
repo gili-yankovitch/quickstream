@@ -14,7 +14,10 @@ namespace DAL
 		[Key]
 		public int Id { get; set; }
 
+		[Required]
 		public byte[] Key { get; set; }
+
+		public string SessionKey { get; set; }
 
 		public List<MsgQueue> Queues { get; set; }
 	}

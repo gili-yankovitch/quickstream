@@ -14,6 +14,7 @@ namespace DAL
 			modelBuilder.Entity<Message>().ToTable("Messages");
 			modelBuilder.Entity<MsgQueue>().ToTable("Queues");
 			modelBuilder.Entity<User>().ToTable("Users");
+			modelBuilder.Entity<Reader>().ToTable("Readers");
 		}
 	}
 }

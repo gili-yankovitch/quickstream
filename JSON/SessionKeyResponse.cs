@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace JSON
 {
 	[DataContract]
-	public class UserCreateRequest
+	public class SessionKeyResponse : BooleanResponse
 	{
-		[DataMember] public string Key;
+		[DataMember] public string SessionKey;
 	}
 }

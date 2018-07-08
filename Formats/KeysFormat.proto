@@ -1,0 +1,19 @@
+﻿syntax = "proto3";
+
+message PBPublicKey
+{
+	bytes public_key = 1;
+}
+
+message PBKeyPair
+{
+	bytes private_key = 1;
+	PBPublicKey public_key = 2;
+}
+
+message PBCertificate
+{
+	bytes signature = 1;
+	bytes public_key = 2;
+	string name = 3;
+}

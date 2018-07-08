@@ -2,6 +2,7 @@
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Security.Policy;
+using System.Text;
 using JSON;
 using LogicServices;
 
@@ -20,7 +21,7 @@ namespace QuickStream.Handlers
 					request.InputStream);
 
 			new DataContractJsonSerializer(typeof(UserCreateResponse)).WriteObject(response.OutputStream,
-				new UserCreateResponse {Id = UserEngine.GetInstance().RegisterUser(userCreateRequest.Key), Success = true });
+				new UserCreateResponse {Id = UserEngine.RegisterUser(Encoding.ASCII.GetBytes(userCreateRequest.Key)), Success = true });
 		}
 	}
 }

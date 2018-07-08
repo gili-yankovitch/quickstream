@@ -8,7 +8,10 @@ using System.Threading.Tasks;
 namespace JSON
 {
 	[DataContract]
-	public class QueueCreateResponse : JSONResponse
+	public class LoginRequest
 	{
+		[DataMember] public int Id;
+
+		[DataMember] public string Key;
 	}
 }

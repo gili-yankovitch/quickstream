@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Policy;
@@ -80,6 +81,8 @@ namespace QuickStream
 			}
 			catch (Exception e)
 			{
+				Console.WriteLine(e.Message);
+
 				m_500Handler.Serve(context.Request, context.Response,
 					new Url(context.Request.Url.ToString().Substring(subsetUri.Length)));
 				context.Response.StatusCode = m_500Handler.StatusCode;

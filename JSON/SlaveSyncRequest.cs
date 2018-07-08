@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 namespace JSON
 {
 	[DataContract]
-	public class UserCreateRequest
+	public class SlaveSyncRequest
 	{
-		[DataMember] public string Key;
+		[DataMember] public byte[] cert;
+		[DataMember] public byte[] key;
+		[DataMember] public byte[] data;
+		[DataMember] public byte[] signature;
 	}
 }

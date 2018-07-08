@@ -36,6 +36,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\packages\EntityFramework.6.2.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="Google.Protobuf, Version=3.6.0.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Protobuf.3.6.0\lib\net45\Google.Protobuf.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -47,6 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
+    <Compile Include="CryptoEngine.cs" />
     <Compile Include="QueueEngine.cs" />
     <Compile Include="Singleton.cs" />
     <Compile Include="UserEngine.cs" />
@@ -56,6 +61,10 @@
     <ProjectReference Include="..\DAL\DAL.csproj">
       <Project>{FA1677AF-1F65-4A6E-8189-4792F096FBA2}</Project>
       <Name>DAL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Formats\Formats.csproj">
+      <Project>{0acda34d-978e-48da-89b2-06843c6615fe}</Project>
+      <Name>Formats</Name>
     </ProjectReference>
     <ProjectReference Include="..\SQLite.CodeFirst\SQLite.CodeFirst.csproj">
       <Project>{50a32fe4-0e13-4213-a373-72523cdf34d9}</Project>

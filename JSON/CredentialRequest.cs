@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 namespace JSON
 {
 	[DataContract]
-	public class UserCreateRequest
+	public class CredentialRequest
 	{
-		[DataMember] public string Key;
+		[DataMember] public int Id;
+
+		[DataMember] public string SessionKey;
 	}
 }

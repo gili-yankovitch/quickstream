@@ -61,6 +61,7 @@
     <Compile Include="ModelConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MsgQueue.cs" />
+    <Compile Include="Reader.cs" />
     <Compile Include="SqliteConfiguration.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>
