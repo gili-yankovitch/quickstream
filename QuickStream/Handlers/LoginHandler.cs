@@ -25,9 +25,9 @@ namespace QuickStream.Handlers
 			var jsonResponse = new SessionKeyResponse { Success = false };
 			jsonResponse.Message = "Login Failed";
 
-			if (UserEngine.Login(credRequest.Id, credRequest.Key))
+			if (UserEngine.Login(credRequest.Id, credRequest.NodeId, credRequest.Key))
 			{
-				jsonResponse.SessionKey = UserEngine.generateSessionKey(credRequest.Id);
+				jsonResponse.SessionKey = UserEngine.generateSessionKey(credRequest.Id, credRequest.NodeId);
 				jsonResponse.Success = true;
 				jsonResponse.Message = "Successs";
 			}

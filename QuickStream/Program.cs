@@ -29,11 +29,17 @@ namespace QuickStream
 
 			try
 			{
+				/* Load certificate */
+				CryptoEngine.GetInstance().loadCertificate("qs0.cert");
+
+				/* Start Buffer Queue Thread */
+				QueueEngine.QueueBufferStart();
+
 				var server = new AsyncHTTPServer(port);
 				server.AddHandler("/testQuery", new TestQueryHandler());
 				server.AddHandler("/createUser", new CreateUserHandler());
 				server.AddHandler("/createQueue", new CreateQueueHandler());
-				server.AddHandler("/slaveSync", new SlaveSyncHandler());
+				server.AddHandler("/partnerSync", new PartnerSyncHandler());
 				server.AddHandler("/login", new LoginHandler());
 				server.AddHandler("/queue", new QueueHandler());
 

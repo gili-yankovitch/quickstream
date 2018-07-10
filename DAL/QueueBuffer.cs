@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SQLite.CodeFirst;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace DAL
 {
-	public class Reader : IEntity
+	public class QueueBuffer : IEntity
 	{
+		[Autoincrement]
 		[Key]
-		[Required]
 		public int Id { get; set; }
-		
+
 		[Required]
 		public virtual User User { get; set; }
 
@@ -29,6 +30,9 @@ namespace DAL
 		public int QueueId { get; set; }
 
 		[Required]
-		public int Position { get; set; }
+		public DateTime Timestamp { get; set; }
+
+		[Required]
+		public string Data { get; set; }
 	}
 }

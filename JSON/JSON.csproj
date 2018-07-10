@@ -44,13 +44,17 @@
     <Compile Include="CredentialRequest.cs" />
     <Compile Include="JSONResponse.cs" />
     <Compile Include="LoginRequest.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncRequestJoin.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncMessageQueueWrite.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncResponseDBDump.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueueCreateRequest.cs" />
     <Compile Include="BooleanResponse.cs" />
     <Compile Include="QueueReadResponse.cs" />
     <Compile Include="QueueRequest.cs" />
     <Compile Include="SessionKeyResponse.cs" />
-    <Compile Include="SlaveSyncRequest.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncMessage.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncMessageData.cs" />
     <Compile Include="UserCreateRequest.cs" />
     <Compile Include="UserCreateResponse.cs" />
   </ItemGroup>

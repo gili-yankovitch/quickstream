@@ -5,13 +5,11 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JSON
+namespace JSON.PartnerRequests
 {
 	[DataContract]
-	public class QueueCreateRequest : CredentialRequest
+	public class PartnerSyncResponseDBDump : BooleanResponse
 	{
-		[DataMember] public string QueueName;
-
-		[DataMember] public List<List<int>> Readers;
+		[DataMember] public byte[] DBDump;
 	}
 }

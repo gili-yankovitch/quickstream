@@ -38,6 +38,7 @@ namespace CertGen
 			pbKeyPair.PublicKey =
 				new PBPublicKey {PublicKey = ByteString.CopyFrom(pub, HEADER_SIZE, pub.Length - HEADER_SIZE)};
 			pbKeyPair.PrivateKey = ByteString.CopyFrom(prv, HEADER_SIZE + PUBLIC_KEY_SIZE, prv.Length - HEADER_SIZE - PUBLIC_KEY_SIZE);
+			pbKeyPair.IssuedCerts = 0;
 
 			return pbKeyPair;
 		}
@@ -52,8 +53,25 @@ namespace CertGen
 				PublicKey = keyPair.PublicKey.PublicKey
 			};
 
-			var byteCert = dsa.SignData(keyPair.PublicKey.PublicKey.ToByteArray(), HashAlgorithmName.SHA256);
+			/* Issue certificate Id */
+			cert.Id = masterKeyPair.IssuedCerts++;
+
+			if (cert.Id > masterKeyPair.IssuedCerts)
+				throw new OverflowException("Ran out of issueable certificates");
+
+			/* Prepare sign buffer */
+			var pubKey = keyPair.PublicKey.PublicKey.ToByteArray();
+			byte[] signBuff = new byte[pubKey.Length + sizeof(int)];
+
+			pubKey.CopyTo(signBuff, 0);
+			for (int i = 0; i < sizeof(int); ++i)
+			{
+				signBuff[pubKey.Length + i] = (byte)((cert.Id >> (8 * i)) & 0xff);
+			}
+
+			var byteCert = dsa.SignData(signBuff, HashAlgorithmName.SHA256);
 			cert.Signature = ByteString.CopyFrom(byteCert, 0, byteCert.Length);
+			
 
 			return cert;
 		}
@@ -92,14 +110,16 @@ namespace CertGen
 
 			var pbKeyPair = GenerateKeyPair();
 
-			using (var fs = File.Create(options["name"] + ".key"))
+			if (options["type"] == GEN)
 			{
-				pbKeyPair.WriteTo(fs);
+				using (var fs = File.Create(options["name"] + ".key"))
+				{
+					pbKeyPair.WriteTo(fs);
 
-				fs.Close();
+					fs.Close();
+				}
 			}
-
-			if (options["type"] == CERT)
+			else
 			{
 				var pbMasterKeyPair = new PBKeyPair();
 
@@ -108,18 +128,25 @@ namespace CertGen
 					pbMasterKeyPair.MergeFrom(fs);
 				}
 
-				using (var fs = File.Create(options["master"] + ".key.pub"))
-				{
-					pbMasterKeyPair.PublicKey.WriteTo(fs);
+				var pbCertFile = new PBCertFile();
 
-					fs.Close();
-				}
-
-				var pbCert = SignCertificate(options["name"], pbMasterKeyPair, pbKeyPair);
+				/* Copy public master key */
+				pbCertFile.MasterPublic = new PBPublicKey();
+				pbCertFile.MasterPublic.PublicKey = pbMasterKeyPair.PublicKey.PublicKey;
+				pbCertFile.Cert = SignCertificate(options["name"], pbMasterKeyPair, pbKeyPair);
+				pbCertFile.Keys = pbKeyPair;
 
 				using (var fs = File.Open(options["name"] + ".cert", FileMode.Create))
 				{
-					pbCert.WriteTo(fs);
+					pbCertFile.WriteTo(fs);
+				}
+
+				/* Update CA with number of certificates issued */
+				using (var fs = File.Open(options["master"] + ".key", FileMode.OpenOrCreate))
+				{
+					pbMasterKeyPair.WriteTo(fs);
+
+					fs.Close();
 				}
 			}
 

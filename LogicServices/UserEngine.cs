@@ -18,34 +18,44 @@ namespace LogicServices
 		    return hash.ComputeHash(key);
 	    }
 
-		public static int RegisterUser(byte[] key)
+		public static int RegisterUser(int NodeId, byte[] key)
 		{
-			var u = new User { Key = ComputeHash(key), Queues = new List<MsgQueue>() };
+			var u = new User { IssueNodeId = NodeId, Key = ComputeHash(key), Queues = new List<MsgQueue>() };
 
 		    using (var ctx = new MessagingContext())
 		    {
+				/* Generate an incrementing Id as SQLite apparently drops the autoincrement when there are multiple fields for PK */
+				try
+				{
+					u.Id = ctx.Users.Max(user => user.Id) + 1;
+				}
+				catch (InvalidOperationException e)
+				{
+					u.Id = 0;
+				}
+
 			    ctx.Users.Add(u);
-			    ctx.SaveChanges();
+				ctx.SaveChanges();
 		    }
 
 		    return u.Id;
 	    }
 
-	    public static bool Login(int id, string key)
+	    public static bool Login(int id, int nodeId, string key)
 	    {
 		    using (var ctx = new MessagingContext())
 		    {
-			    var u = ctx.Users.Find(id);
+			    var u = ctx.Users.Find(id, nodeId);
 
-			    return (u != null) && (u.Key.SequenceEqual(ComputeHash(Encoding.ASCII.GetBytes(key))));
+				return (u != null) && (u.Key.SequenceEqual(ComputeHash(Encoding.ASCII.GetBytes(key))));
 		    }
 	    }
 
-		public static bool LoginBySessionId(int id, string sess)
+		public static bool LoginBySessionId(int id, int nodeId, string sess)
 		{
 			using (var ctx = new MessagingContext())
 			{
-				var u = ctx.Users.Find(id);
+				var u = ctx.Users.Find(id, nodeId);
 
 				if (u?.SessionKey != sess)
 					return false;
@@ -70,7 +80,7 @@ namespace LogicServices
 			return sb.ToString();
 		}
 
-		public static string generateSessionKey(int id)
+		public static string generateSessionKey(int id, int nodeId)
 		{
 			var sess = _generateSessionKey();
 
@@ -81,7 +91,7 @@ namespace LogicServices
 					sess = _generateSessionKey();
 				}
 
-				var u = ctx.Users.Find(id);
+				var u = ctx.Users.Find(id, nodeId);
 
 				u.SessionKey = sess;
 

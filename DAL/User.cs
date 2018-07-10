@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,9 +11,11 @@ namespace DAL
 {
 	public class User : IEntity
 	{
-		[Autoincrement]
-		[Key]
+		[Key, Autoincrement, Column(Order = 0)]
 		public int Id { get; set; }
+
+		[Key, Column(Order = 1)]
+		public int IssueNodeId { get; set; }
 
 		[Required]
 		public byte[] Key { get; set; }

@@ -9,6 +9,7 @@ message PBKeyPair
 {
 	bytes private_key = 1;
 	PBPublicKey public_key = 2;
+	int32 issued_certs = 3;
 }
 
 message PBCertificate
@@ -16,4 +17,12 @@ message PBCertificate
 	bytes signature = 1;
 	bytes public_key = 2;
 	string name = 3;
+	int32 id = 4;
+}
+
+message PBCertFile
+{
+	PBKeyPair keys = 1;
+	PBCertificate cert = 2;
+	PBPublicKey masterPublic = 3;
 }

@@ -21,7 +21,7 @@ namespace QuickStream.Handlers
 			var jsonResponse = new BooleanResponse { Success = false };
 
 		
-			if (!UserEngine.LoginBySessionId(queueCreateRequest.Id, queueCreateRequest.SessionKey))
+			if (!UserEngine.LoginBySessionId(queueCreateRequest.Id, queueCreateRequest.NodeId, queueCreateRequest.SessionKey))
 			{
 				jsonResponse.Message = "Login Failed";
 			}
@@ -29,7 +29,7 @@ namespace QuickStream.Handlers
 			{
 				try
 				{
-					QueueEngine.CreateQueue(queueCreateRequest.Id, queueCreateRequest.QueueName, queueCreateRequest.Readers);
+					QueueEngine.CreateQueue(queueCreateRequest.Id, queueCreateRequest.NodeId, queueCreateRequest.QueueName, queueCreateRequest.Readers);
 
 					jsonResponse.Success = true;
 				}

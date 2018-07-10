@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace LogicServices
 {
-	class Config
+	public class Config
 	{
+		public const long QUEUE_GRACE_PERIOD = 100;
+
+		public const string DB_Filename = "QuickStream.sqlite";
 	}
 }

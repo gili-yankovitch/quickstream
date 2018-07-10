@@ -11,7 +11,8 @@ namespace LogicServices
 {
 	public class CryptoEngine : Singleton<CryptoEngine>
 	{
-		private PBPublicKey masterKey = null;
+		public PBCertFile Certificate { get; set; }
+		private bool initialized = false;
 
 		private const int HEADER_SIZE = 8;
 		private const int PUBLIC_KEY_SIZE = 64;
@@ -62,26 +63,32 @@ namespace LogicServices
 			return this.ECLoad(pubkey.ToByteArray());
 		}
 
-		private void lazyLoadCert()
+		public void loadCertificate(string certfile)
 		{
-			/* Lazy-load master key */
-			if (masterKey == null)
+			if (! this.initialized)
 			{
-				using (var fs = File.Open("master.key.pub", FileMode.Open))
+				using (var fs = File.Open(certfile, FileMode.Open))
 				{
-					this.masterKey = new PBPublicKey();
-					this.masterKey.MergeFrom(fs);
+					this.Certificate = new PBCertFile();
+					this.Certificate.MergeFrom(fs);
 				}
+
+				this.initialized = true;
 			}
 		}
 
-		public ECDsaCng verifyCertificate(byte[] key, byte[] signature)
+		public ECDsaCng verifyCertificate(byte[] key, int certId, byte[] signature)
 		{
-			this.lazyLoadCert();
+			byte[] signBuff = new byte[key.Length + sizeof(int)];
+			key.CopyTo(signBuff, 0);
+			for (int i = 0; i < sizeof(int); ++i)
+			{
+				signBuff[key.Length + i] = (byte)((certId >> (8 * i)) & 0xff);
+			}
 
-			var dsa = this.ECLoad(this.masterKey.PublicKey);
+			var dsa = this.ECLoad(this.Certificate.MasterPublic.PublicKey);
 
-			if (!dsa.VerifyData(key, signature, HashAlgorithmName.SHA256))
+			if (!dsa.VerifyData(signBuff, signature, HashAlgorithmName.SHA256))
 			{
 				throw new CryptographicException("Certificate verification failed");
 			}
@@ -91,7 +98,7 @@ namespace LogicServices
 
 		public ECDsaCng verifyCertificate(PBCertificate cert)
 		{
-			return this.verifyCertificate(cert.PublicKey.ToByteArray(), cert.Signature.ToByteArray());
+			return this.verifyCertificate(cert.PublicKey.ToByteArray(), cert.Id, cert.Signature.ToByteArray());
 		}
 	}
 }

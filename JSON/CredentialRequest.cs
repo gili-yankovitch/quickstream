@@ -12,6 +12,8 @@ namespace JSON
 	{
 		[DataMember] public int Id;
 
+		[DataMember] public int NodeId;
+
 		[DataMember] public string SessionKey;
 	}
 }

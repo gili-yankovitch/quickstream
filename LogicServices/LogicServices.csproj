@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="CryptoEngine.cs" />
+    <Compile Include="PartnersEngine.cs" />
     <Compile Include="QueueEngine.cs" />
     <Compile Include="Singleton.cs" />
     <Compile Include="UserEngine.cs" />

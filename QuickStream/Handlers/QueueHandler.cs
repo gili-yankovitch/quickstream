@@ -23,16 +23,19 @@ namespace QuickStream.Handlers
 			/* Know what action is being performed */
 			var details = url.Value.Split('/');
 
-			if (!int.TryParse(details[3], out int user))
+			if (!int.TryParse(details[3], out int node))
+				node = -1;
+
+			if (!int.TryParse(details[4], out int user))
 				user = -1;
 
-			var queue = details[4];
+			var queue = details[5];
 
 			var action =
 				(QueueRequest)new DataContractJsonSerializer(typeof(QueueRequest)).ReadObject(
 					request.InputStream);
 
-			if (!UserEngine.LoginBySessionId(action.Id, action.SessionKey))
+			if (!UserEngine.LoginBySessionId(action.Id, action.NodeId, action.SessionKey))
 			{
 				new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
 						new BooleanResponse { Success = false, Message = "Failed Login" });
@@ -46,10 +49,10 @@ namespace QuickStream.Handlers
 
 					try
 					{
-						if (user != action.Id)
+						if ((user != action.Id) || (node != action.NodeId))
 							throw new Exception("Permission denied: Invalid writer user");
 
-						QueueEngine.WriteQueue(user, queue, action.Data);
+						QueueEngine.WriteBufferedQueue(user, node, queue, action.Data);
 						jsonResponse.Success = true;
 						jsonResponse.Message = "Success";
 					}
@@ -69,7 +72,7 @@ namespace QuickStream.Handlers
 
 					try
 					{
-						jsonResponse.Messages = QueueEngine.ReadQueue(action.Id, user, queue, action.Commit);
+						jsonResponse.Messages = QueueEngine.ReadQueue(action.Id, user, node, queue, action.Commit);
 						jsonResponse.Success = true;
 					}
 					catch (Exception e)

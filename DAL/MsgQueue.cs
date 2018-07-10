@@ -25,8 +25,12 @@ namespace DAL
 
 		public virtual List<Reader> Readers { get; set; }
 
-		[ForeignKey("UserId")]
 		public virtual User User { get; set; }
+
+		[ForeignKey("User"), Column(Order = 0)]
 		public int UserId { get; set; }
+
+		[ForeignKey("User"), Column(Order = 1)]
+		public int NodeId { get; set; }
 	}
 }

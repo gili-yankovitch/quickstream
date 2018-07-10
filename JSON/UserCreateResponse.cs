@@ -11,5 +11,6 @@ namespace JSON
 	public class UserCreateResponse : JSONResponse
 	{
 		[DataMember] public int Id;
+		[DataMember] public int NodeId;
 	}
 }

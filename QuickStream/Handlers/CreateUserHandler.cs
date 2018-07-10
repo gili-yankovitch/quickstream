@@ -21,7 +21,7 @@ namespace QuickStream.Handlers
 					request.InputStream);
 
 			new DataContractJsonSerializer(typeof(UserCreateResponse)).WriteObject(response.OutputStream,
-				new UserCreateResponse {Id = UserEngine.RegisterUser(Encoding.ASCII.GetBytes(userCreateRequest.Key)), Success = true });
+				new UserCreateResponse {Id = UserEngine.RegisterUser(CryptoEngine.GetInstance().Certificate.Cert.Id, Encoding.ASCII.GetBytes(userCreateRequest.Key)), NodeId = CryptoEngine.GetInstance().Certificate.Cert.Id, Success = true });
 		}
 	}
 }

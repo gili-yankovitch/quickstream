@@ -42,15 +42,17 @@ class QuickStream:
 			"Key": _PASSWORD
 			})
 
-		return r["Id"]
+		return {"Id": r["Id"], "NodeId": r["NodeId"]}
 
-	def login(self, uid, key):
+	def login(self, nodeId, uid, key):
 		r = self._action("login", {
 			"Id": uid,
+			"NodeId": nodeId,
 			"Key": key
 			})
 
 		self.uid = uid
+		self.nodeId = nodeId;
 		self.session_key = r["SessionKey"]
 
 		return self.session_key
@@ -62,13 +64,13 @@ class QuickStream:
 			})
 
 	def writeQueue(self, name, data):
-		r = self._action("queue/%d/%s" % (self.uid, name), {
+		r = self._action("queue/%d/%d/%s" % (self.nodeId, self.uid, name), {
 			"Action": QuickStream.E_WRITE,
 			"Data": data
 			})
 
-	def readQueue(self, uid, name, commit = False):
-		r = self._action("queue/%d/%s" % (uid, name), {
+	def readQueue(self, nodeId, uid, name, commit = False):
+		r = self._action("queue/%d/%d/%s" % (nodeId, uid, name), {
 			"Action": QuickStream.E_READ,
 			"Commit": commit
 			})
@@ -87,27 +89,28 @@ if __name__ == "__main__":
 	# Pick the last one
 	uid = uids[-1]
 
-	print("Register success. UID: %d" % uid)
+	print("Register success. UID: %d on Node: %d" % (uid["Id"], uid["NodeId"]))
 
 	# Login
-	sess = api.login(uid, _PASSWORD)
+	sess = api.login(uid["NodeId"], uid["Id"], _PASSWORD)
 
-	print("Login (uid = %d) success. SessionKey: %s" % (uid, sess))
+	print("Login (uid = %d) success. SessionKey: %s" % (uid["Id"], sess))
 
 	# Register the rest of the uids
-	api.createQueue("queue0", uids[:-1])
+	api.createQueue("queue0", [ [x["Id"], x["NodeId"]] for x in uids[:-1] ])
 
 	print("Created queue: queue0")
 
 	# Write data to queue
-	api.writeQueue("queue0", "Hello, world!")
+	api.writeQueue("queue0", "Hello, world! 0")
+	api.writeQueue("queue0", "Hello, world! 1")
 
 	print("Written to queue0")
 
 	# Login as a different uid
-	sess = api.login(uids[0], _PASSWORD)
+	sess = api.login(uids[0]["NodeId"], uids[0]["Id"], _PASSWORD)
 
-	print("Login (uid = %d) success. SessionKey: %s" % (uids[0], sess))
+	print("Login (uid = %d nodeId = %d) success. SessionKey: %s" % (uids[0]["Id"], uids[0]["NodeId"], sess))
 
 	# Read from queue
-	print(api.readQueue(uids[-1], "queue0"))
+	print(api.readQueue(uids[-1]["NodeId"], uids[-1]["Id"], "queue0"))

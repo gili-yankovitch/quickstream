@@ -23,16 +23,20 @@ public static partial class KeysFormatReflection {
     byte[] descriptorData = global::System.Convert.FromBase64String(
         string.Concat(
           "ChBLZXlzRm9ybWF0LnByb3RvIiEKC1BCUHVibGljS2V5EhIKCnB1YmxpY19r",
-          "ZXkYASABKAwiQgoJUEJLZXlQYWlyEhMKC3ByaXZhdGVfa2V5GAEgASgMEiAK",
-          "CnB1YmxpY19rZXkYAiABKAsyDC5QQlB1YmxpY0tleSJECg1QQkNlcnRpZmlj",
-          "YXRlEhEKCXNpZ25hdHVyZRgBIAEoDBISCgpwdWJsaWNfa2V5GAIgASgMEgwK",
-          "BG5hbWUYAyABKAliBnByb3RvMw=="));
+          "ZXkYASABKAwiWAoJUEJLZXlQYWlyEhMKC3ByaXZhdGVfa2V5GAEgASgMEiAK",
+          "CnB1YmxpY19rZXkYAiABKAsyDC5QQlB1YmxpY0tleRIUCgxpc3N1ZWRfY2Vy",
+          "dHMYAyABKAUiUAoNUEJDZXJ0aWZpY2F0ZRIRCglzaWduYXR1cmUYASABKAwS",
+          "EgoKcHVibGljX2tleRgCIAEoDBIMCgRuYW1lGAMgASgJEgoKAmlkGAQgASgF",
+          "ImgKClBCQ2VydEZpbGUSGAoEa2V5cxgBIAEoCzIKLlBCS2V5UGFpchIcCgRj",
+          "ZXJ0GAIgASgLMg4uUEJDZXJ0aWZpY2F0ZRIiCgxtYXN0ZXJQdWJsaWMYAyAB",
+          "KAsyDC5QQlB1YmxpY0tleWIGcHJvdG8z"));
     descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
         new pbr::FileDescriptor[] { },
         new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
           new pbr::GeneratedClrTypeInfo(typeof(global::PBPublicKey), global::PBPublicKey.Parser, new[]{ "PublicKey" }, null, null, null),
-          new pbr::GeneratedClrTypeInfo(typeof(global::PBKeyPair), global::PBKeyPair.Parser, new[]{ "PrivateKey", "PublicKey" }, null, null, null),
-          new pbr::GeneratedClrTypeInfo(typeof(global::PBCertificate), global::PBCertificate.Parser, new[]{ "Signature", "PublicKey", "Name" }, null, null, null)
+          new pbr::GeneratedClrTypeInfo(typeof(global::PBKeyPair), global::PBKeyPair.Parser, new[]{ "PrivateKey", "PublicKey", "IssuedCerts" }, null, null, null),
+          new pbr::GeneratedClrTypeInfo(typeof(global::PBCertificate), global::PBCertificate.Parser, new[]{ "Signature", "PublicKey", "Name", "Id" }, null, null, null),
+          new pbr::GeneratedClrTypeInfo(typeof(global::PBCertFile), global::PBCertFile.Parser, new[]{ "Keys", "Cert", "MasterPublic" }, null, null, null)
         }));
   }
   #endregion
@@ -195,6 +199,7 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
   public PBKeyPair(PBKeyPair other) : this() {
     privateKey_ = other.privateKey_;
     PublicKey = other.publicKey_ != null ? other.PublicKey.Clone() : null;
+    issuedCerts_ = other.issuedCerts_;
     _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
   }
 
@@ -225,6 +230,17 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
     }
   }
 
+  /// <summary>Field number for the "issued_certs" field.</summary>
+  public const int IssuedCertsFieldNumber = 3;
+  private int issuedCerts_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public int IssuedCerts {
+    get { return issuedCerts_; }
+    set {
+      issuedCerts_ = value;
+    }
+  }
+
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
   public override bool Equals(object other) {
     return Equals(other as PBKeyPair);
@@ -240,6 +256,7 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
     }
     if (PrivateKey != other.PrivateKey) return false;
     if (!object.Equals(PublicKey, other.PublicKey)) return false;
+    if (IssuedCerts != other.IssuedCerts) return false;
     return Equals(_unknownFields, other._unknownFields);
   }
 
@@ -248,6 +265,7 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
     int hash = 1;
     if (PrivateKey.Length != 0) hash ^= PrivateKey.GetHashCode();
     if (publicKey_ != null) hash ^= PublicKey.GetHashCode();
+    if (IssuedCerts != 0) hash ^= IssuedCerts.GetHashCode();
     if (_unknownFields != null) {
       hash ^= _unknownFields.GetHashCode();
     }
@@ -269,6 +287,10 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
       output.WriteRawTag(18);
       output.WriteMessage(PublicKey);
     }
+    if (IssuedCerts != 0) {
+      output.WriteRawTag(24);
+      output.WriteInt32(IssuedCerts);
+    }
     if (_unknownFields != null) {
       _unknownFields.WriteTo(output);
     }
@@ -282,6 +304,9 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
     }
     if (publicKey_ != null) {
       size += 1 + pb::CodedOutputStream.ComputeMessageSize(PublicKey);
+    }
+    if (IssuedCerts != 0) {
+      size += 1 + pb::CodedOutputStream.ComputeInt32Size(IssuedCerts);
     }
     if (_unknownFields != null) {
       size += _unknownFields.CalculateSize();
@@ -303,6 +328,9 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
       }
       PublicKey.MergeFrom(other.PublicKey);
     }
+    if (other.IssuedCerts != 0) {
+      IssuedCerts = other.IssuedCerts;
+    }
     _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
   }
 
@@ -323,6 +351,10 @@ public sealed partial class PBKeyPair : pb::IMessage<PBKeyPair> {
             publicKey_ = new global::PBPublicKey();
           }
           input.ReadMessage(publicKey_);
+          break;
+        }
+        case 24: {
+          IssuedCerts = input.ReadInt32();
           break;
         }
       }
@@ -359,6 +391,7 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
     signature_ = other.signature_;
     publicKey_ = other.publicKey_;
     name_ = other.name_;
+    id_ = other.id_;
     _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
   }
 
@@ -400,6 +433,17 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
     }
   }
 
+  /// <summary>Field number for the "id" field.</summary>
+  public const int IdFieldNumber = 4;
+  private int id_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public int Id {
+    get { return id_; }
+    set {
+      id_ = value;
+    }
+  }
+
   [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
   public override bool Equals(object other) {
     return Equals(other as PBCertificate);
@@ -416,6 +460,7 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
     if (Signature != other.Signature) return false;
     if (PublicKey != other.PublicKey) return false;
     if (Name != other.Name) return false;
+    if (Id != other.Id) return false;
     return Equals(_unknownFields, other._unknownFields);
   }
 
@@ -425,6 +470,7 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
     if (Signature.Length != 0) hash ^= Signature.GetHashCode();
     if (PublicKey.Length != 0) hash ^= PublicKey.GetHashCode();
     if (Name.Length != 0) hash ^= Name.GetHashCode();
+    if (Id != 0) hash ^= Id.GetHashCode();
     if (_unknownFields != null) {
       hash ^= _unknownFields.GetHashCode();
     }
@@ -450,6 +496,10 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
       output.WriteRawTag(26);
       output.WriteString(Name);
     }
+    if (Id != 0) {
+      output.WriteRawTag(32);
+      output.WriteInt32(Id);
+    }
     if (_unknownFields != null) {
       _unknownFields.WriteTo(output);
     }
@@ -466,6 +516,9 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
     }
     if (Name.Length != 0) {
       size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
+    }
+    if (Id != 0) {
+      size += 1 + pb::CodedOutputStream.ComputeInt32Size(Id);
     }
     if (_unknownFields != null) {
       size += _unknownFields.CalculateSize();
@@ -486,6 +539,9 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
     }
     if (other.Name.Length != 0) {
       Name = other.Name;
+    }
+    if (other.Id != 0) {
+      Id = other.Id;
     }
     _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
   }
@@ -508,6 +564,213 @@ public sealed partial class PBCertificate : pb::IMessage<PBCertificate> {
         }
         case 26: {
           Name = input.ReadString();
+          break;
+        }
+        case 32: {
+          Id = input.ReadInt32();
+          break;
+        }
+      }
+    }
+  }
+
+}
+
+public sealed partial class PBCertFile : pb::IMessage<PBCertFile> {
+  private static readonly pb::MessageParser<PBCertFile> _parser = new pb::MessageParser<PBCertFile>(() => new PBCertFile());
+  private pb::UnknownFieldSet _unknownFields;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public static pb::MessageParser<PBCertFile> Parser { get { return _parser; } }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public static pbr::MessageDescriptor Descriptor {
+    get { return global::KeysFormatReflection.Descriptor.MessageTypes[3]; }
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  pbr::MessageDescriptor pb::IMessage.Descriptor {
+    get { return Descriptor; }
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public PBCertFile() {
+    OnConstruction();
+  }
+
+  partial void OnConstruction();
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public PBCertFile(PBCertFile other) : this() {
+    Keys = other.keys_ != null ? other.Keys.Clone() : null;
+    Cert = other.cert_ != null ? other.Cert.Clone() : null;
+    MasterPublic = other.masterPublic_ != null ? other.MasterPublic.Clone() : null;
+    _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public PBCertFile Clone() {
+    return new PBCertFile(this);
+  }
+
+  /// <summary>Field number for the "keys" field.</summary>
+  public const int KeysFieldNumber = 1;
+  private global::PBKeyPair keys_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public global::PBKeyPair Keys {
+    get { return keys_; }
+    set {
+      keys_ = value;
+    }
+  }
+
+  /// <summary>Field number for the "cert" field.</summary>
+  public const int CertFieldNumber = 2;
+  private global::PBCertificate cert_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public global::PBCertificate Cert {
+    get { return cert_; }
+    set {
+      cert_ = value;
+    }
+  }
+
+  /// <summary>Field number for the "masterPublic" field.</summary>
+  public const int MasterPublicFieldNumber = 3;
+  private global::PBPublicKey masterPublic_;
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public global::PBPublicKey MasterPublic {
+    get { return masterPublic_; }
+    set {
+      masterPublic_ = value;
+    }
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public override bool Equals(object other) {
+    return Equals(other as PBCertFile);
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public bool Equals(PBCertFile other) {
+    if (ReferenceEquals(other, null)) {
+      return false;
+    }
+    if (ReferenceEquals(other, this)) {
+      return true;
+    }
+    if (!object.Equals(Keys, other.Keys)) return false;
+    if (!object.Equals(Cert, other.Cert)) return false;
+    if (!object.Equals(MasterPublic, other.MasterPublic)) return false;
+    return Equals(_unknownFields, other._unknownFields);
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public override int GetHashCode() {
+    int hash = 1;
+    if (keys_ != null) hash ^= Keys.GetHashCode();
+    if (cert_ != null) hash ^= Cert.GetHashCode();
+    if (masterPublic_ != null) hash ^= MasterPublic.GetHashCode();
+    if (_unknownFields != null) {
+      hash ^= _unknownFields.GetHashCode();
+    }
+    return hash;
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public override string ToString() {
+    return pb::JsonFormatter.ToDiagnosticString(this);
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public void WriteTo(pb::CodedOutputStream output) {
+    if (keys_ != null) {
+      output.WriteRawTag(10);
+      output.WriteMessage(Keys);
+    }
+    if (cert_ != null) {
+      output.WriteRawTag(18);
+      output.WriteMessage(Cert);
+    }
+    if (masterPublic_ != null) {
+      output.WriteRawTag(26);
+      output.WriteMessage(MasterPublic);
+    }
+    if (_unknownFields != null) {
+      _unknownFields.WriteTo(output);
+    }
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public int CalculateSize() {
+    int size = 0;
+    if (keys_ != null) {
+      size += 1 + pb::CodedOutputStream.ComputeMessageSize(Keys);
+    }
+    if (cert_ != null) {
+      size += 1 + pb::CodedOutputStream.ComputeMessageSize(Cert);
+    }
+    if (masterPublic_ != null) {
+      size += 1 + pb::CodedOutputStream.ComputeMessageSize(MasterPublic);
+    }
+    if (_unknownFields != null) {
+      size += _unknownFields.CalculateSize();
+    }
+    return size;
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public void MergeFrom(PBCertFile other) {
+    if (other == null) {
+      return;
+    }
+    if (other.keys_ != null) {
+      if (keys_ == null) {
+        keys_ = new global::PBKeyPair();
+      }
+      Keys.MergeFrom(other.Keys);
+    }
+    if (other.cert_ != null) {
+      if (cert_ == null) {
+        cert_ = new global::PBCertificate();
+      }
+      Cert.MergeFrom(other.Cert);
+    }
+    if (other.masterPublic_ != null) {
+      if (masterPublic_ == null) {
+        masterPublic_ = new global::PBPublicKey();
+      }
+      MasterPublic.MergeFrom(other.MasterPublic);
+    }
+    _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+  }
+
+  [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+  public void MergeFrom(pb::CodedInputStream input) {
+    uint tag;
+    while ((tag = input.ReadTag()) != 0) {
+      switch(tag) {
+        default:
+          _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+          break;
+        case 10: {
+          if (keys_ == null) {
+            keys_ = new global::PBKeyPair();
+          }
+          input.ReadMessage(keys_);
+          break;
+        }
+        case 18: {
+          if (cert_ == null) {
+            cert_ = new global::PBCertificate();
+          }
+          input.ReadMessage(cert_);
+          break;
+        }
+        case 26: {
+          if (masterPublic_ == null) {
+            masterPublic_ = new global::PBPublicKey();
+          }
+          input.ReadMessage(masterPublic_);
           break;
         }
       }
