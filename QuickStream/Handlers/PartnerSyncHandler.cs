@@ -21,23 +21,9 @@ namespace QuickStream.Handlers
 
 		public int StatusCode => 200;
 
-		private void RelayMessageToPartners(JSON.PartnerSyncRequest syncRequest)
-		{
-			foreach (var p in PartnersEngine.Partners)
-			{
-				var client = new HttpClient();
-				var addr = new StringBuilder().Append("http://").Append(p).Append("/partnerSync");
-				var memStream = new MemoryStream();
-
-				new DataContractJsonSerializer(typeof(JSON.PartnerSyncRequest)).WriteObject(memStream, syncRequest);
-
-				client.PostAsync(addr.ToString(), new StringContent(new StreamReader(memStream).ReadToEnd()));
-			}
-		}
-
 		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Url url)
 		{
-			var slaveSyncRequest =
+			var partnerSyncRequest =
 				(JSON.PartnerSyncRequest)new DataContractJsonSerializer(typeof(JSON.PartnerSyncRequest)).ReadObject(
 					request.InputStream);
 
@@ -46,53 +32,127 @@ namespace QuickStream.Handlers
 			/* Validate incoming certificate */
 			try
 			{
-				if (!CryptoEngine.GetInstance().verifyCertificate(slaveSyncRequest.key, slaveSyncRequest.certId, slaveSyncRequest.cert)
-					.VerifyData(slaveSyncRequest.data, slaveSyncRequest.signature, HashAlgorithmName.SHA256))
+				if (!CryptoEngine.GetInstance().verifyCertificate(partnerSyncRequest.key, partnerSyncRequest.certId, partnerSyncRequest.cert)
+					.VerifyData(partnerSyncRequest.data, partnerSyncRequest.signature, HashAlgorithmName.SHA256))
 				{
 					throw new CryptographicException("Data verification failed");
 				}
 
 				/* Insert data to MemoryStream to parse the actual data */
 				var dataStream = new MemoryStream();
-				dataStream.Write(slaveSyncRequest.data, 0, slaveSyncRequest.data.Length);
+				dataStream.Write(partnerSyncRequest.data, 0, partnerSyncRequest.data.Length);
 				dataStream.Seek(0, SeekOrigin.Begin);
 
 				/* Parse action */
-				var slaveSyncRequestData =
+				var partnerSyncRequestData =
 					(PartnerSyncRequestData)new DataContractJsonSerializer(typeof(PartnerSyncRequestData)).ReadObject(
 					dataStream);
 
+				var partnerData = new MemoryStream();
+				partnerData.Write(partnerSyncRequestData.Data, 0, partnerSyncRequestData.Data.Length);
+				partnerData.Seek(0, SeekOrigin.Begin);
+
 				/* Figure out which message type need to be handled */
-				switch (slaveSyncRequestData.MessageType)
+				switch (partnerSyncRequestData.MessageType)
 				{
 					case PartnerSyncMessage.PARTNER_JOIN:
 						{
-							var joinStream = new MemoryStream();
-							joinStream.Write(slaveSyncRequestData.Data, 0, slaveSyncRequestData.Data.Length);
-							joinStream.Seek(0, SeekOrigin.Begin);
-
 							/* Parse join request */
-							var partrnerJoinRequest =
+							var partnerJoinRequest =
 									(PartnerSyncRequestJoin)new DataContractJsonSerializer(typeof(PartnerSyncRequestJoin)).ReadObject(
-									dataStream);
+									partnerData);
 
 							/* Add to partners */
-							PartnersEngine.AddPartner(partrnerJoinRequest.Address);
+							PartnersEngine.AddPartner(partnerJoinRequest.Address);
 
-							/* Master is responsible on updating other partners about DB changes once they go up */
-							if (PartnersEngine.IsMaster)
+							/* Create a DB Dump object */
+							var partnerDBDump = new PartnerSyncResponseDBDump();
+							var dbFile = File.Open(Config.DB_Filename, FileMode.Open);
+
+							using (var reader = new BinaryReader(dbFile))
 							{
-								/* Create a DB Dump object */
-								var partnerDBDump = new PartnerSyncResponseDBDump();
-								var dbFile = File.Open(Config.DB_Filename, FileMode.Open);
-
-								using (var reader = new BinaryReader(dbFile))
-								{
-									/* Hopefully DB will not be larger than 2GB */
-									partnerDBDump.DBDump = reader.ReadBytes((int)dbFile.Length);
-								}
-
+								/* Hopefully DB will not be larger than 2GB */
+								partnerDBDump.DBDump = reader.ReadBytes((int)dbFile.Length);
 							}
+
+							// TODO: Return ALL MESSAGES SIGNED
+							new DataContractJsonSerializer(typeof(PartnerSyncResponseDBDump)).WriteObject(response.OutputStream,
+								partnerDBDump);
+
+							break;
+						}
+
+					case PartnerSyncMessage.USER_CREATE:
+						{
+							/* Parse register request */
+							var userRegisterRequest =
+									(PartnerSyncUserCreate)new DataContractJsonSerializer(typeof(PartnerSyncUserCreate)).ReadObject(
+									partnerData);
+
+							/* Update here */
+							UserEngine.RegisterUser(partnerSyncRequest.certId, userRegisterRequest.Id, Encoding.ASCII.GetBytes(userRegisterRequest.Key));
+
+							jsonResponse.Success = true;
+							jsonResponse.Message = "Success";
+
+							// TODO: Return ALL MESSAGES SIGNED
+							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
+								jsonResponse);
+
+							break;
+						}
+
+					case PartnerSyncMessage.QUEUE_CREATE:
+						{
+							/* Parse queue create request */
+							var queueCreateRequest =
+									(PartnerSyncQueueCreate)new DataContractJsonSerializer(typeof(PartnerSyncQueueCreate)).ReadObject(
+									partnerData);
+
+							QueueEngine.CreateQueue(queueCreateRequest.UID, queueCreateRequest.NodeId, queueCreateRequest.QueueName, queueCreateRequest.Readers);
+
+							jsonResponse.Success = true;
+							jsonResponse.Message = "Success";
+
+							// TODO: Return ALL MESSAGES SIGNED
+							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
+								jsonResponse);
+
+							break;
+						}
+
+					case PartnerSyncMessage.QUEUE_WRITE:
+						{
+							/* Parse queue write request */
+							var queueWriteRequest =
+									(PartnerSyncQueueWrite)new DataContractJsonSerializer(typeof(PartnerSyncQueueWrite)).ReadObject(
+									partnerData);
+
+							/* Add to buffered queue */
+							QueueEngine.WriteBufferedQueue(queueWriteRequest.UID, queueWriteRequest.NodeId, queueWriteRequest.QueueName, queueWriteRequest.Data, queueWriteRequest.Timestamp);
+
+							jsonResponse.Success = true;
+							jsonResponse.Message = "Success";
+
+							// TODO: Return ALL MESSAGES SIGNED
+							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
+								jsonResponse);
+
+							break;
+						}
+
+					case PartnerSyncMessage.QUEUE_COMMIT:
+						{
+							/* Parse queue commit request */
+							var queueCommitRequest =
+									(PartnerSyncRequestCommit)new DataContractJsonSerializer(typeof(PartnerSyncRequestCommit)).ReadObject(
+									partnerData);
+
+							QueueEngine.CommitQueue(queueCommitRequest.UID, queueCommitRequest.NodeId, queueCommitRequest.QueueName);
+
+							// TODO: Return ALL MESSAGES SIGNED
+							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
+								jsonResponse);
 
 							break;
 						}
@@ -104,19 +164,15 @@ namespace QuickStream.Handlers
 							break;
 						}
 				}
-
-				/* Relay message to all slaves */
 			}
 			catch (CryptographicException e)
 			{
 				Console.WriteLine(e);
 
 				jsonResponse.Message = e.Message;
-			}
-			finally
-			{
+
 				new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
-					jsonResponse);
+								jsonResponse);
 			}
 		}
 	}

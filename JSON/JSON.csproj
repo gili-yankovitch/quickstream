@@ -44,9 +44,13 @@
     <Compile Include="CredentialRequest.cs" />
     <Compile Include="JSONResponse.cs" />
     <Compile Include="LoginRequest.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncQueueCreate.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncQueueWrite.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncRequestCommit.cs" />
     <Compile Include="PartnerRequests\PartnerSyncRequestJoin.cs" />
     <Compile Include="PartnerRequests\PartnerSyncMessageQueueWrite.cs" />
     <Compile Include="PartnerRequests\PartnerSyncResponseDBDump.cs" />
+    <Compile Include="PartnerRequests\PartnerSyncUserCreate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueueCreateRequest.cs" />
     <Compile Include="BooleanResponse.cs" />

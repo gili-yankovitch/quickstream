@@ -22,8 +22,8 @@ namespace LogicServices
 		{
 			var u = new User { IssueNodeId = NodeId, Key = ComputeHash(key), Queues = new List<MsgQueue>() };
 
-		    using (var ctx = new MessagingContext())
-		    {
+			using (var ctx = new MessagingContext())
+			{
 				/* Generate an incrementing Id as SQLite apparently drops the autoincrement when there are multiple fields for PK */
 				try
 				{
@@ -34,14 +34,27 @@ namespace LogicServices
 					u.Id = 0;
 				}
 
-			    ctx.Users.Add(u);
+				ctx.Users.Add(u);
 				ctx.SaveChanges();
-		    }
+			}
 
-		    return u.Id;
-	    }
+			return u.Id;
+		}
 
-	    public static bool Login(int id, int nodeId, string key)
+		public static int RegisterUser(int NodeId, int UserId, byte[] key)
+		{
+			var u = new User { Id = UserId, IssueNodeId = NodeId, Key = ComputeHash(key), Queues = new List<MsgQueue>() };
+
+			using (var ctx = new MessagingContext())
+			{
+				ctx.Users.Add(u);
+				ctx.SaveChanges();
+			}
+
+			return u.Id;
+		}
+
+		public static bool Login(int id, int nodeId, string key)
 	    {
 		    using (var ctx = new MessagingContext())
 		    {

@@ -110,6 +110,11 @@ namespace LogicServices
 
 		public static void WriteBufferedQueue(int userId, int nodeId, string queueName, string Data)
 		{
+			WriteBufferedQueue(userId, nodeId, queueName, Data, DateTime.Now);
+		}
+
+		public static void WriteBufferedQueue(int userId, int nodeId, string queueName, string Data, DateTime Timestamp)
+		{
 			using (var ctx = new MessagingContext())
 			{
 				var u = ctx.Users.Include(user => user.Queues).FirstOrDefault(user => user.Id == userId && user.IssueNodeId == nodeId);
@@ -122,7 +127,31 @@ namespace LogicServices
 				if (q == null)
 					throw new Exception("Invalid queue");
 
-				ctx.QueueBuffer.Add(new QueueBuffer { User = u, Queue = q, Timestamp = DateTime.Now, Data = Data });
+				ctx.QueueBuffer.Add(new QueueBuffer { User = u, Queue = q, Timestamp = Timestamp, Data = Data });
+
+				ctx.SaveChanges();
+			}
+		}
+
+		public static void CommitQueue(int userId, int nodeId, string queueName)
+		{
+			using (var ctx = new MessagingContext())
+			{
+				var r = ctx.Readers.FirstOrDefault(reader => reader.UserId == userId && reader.NodeId == nodeId);
+
+				/* For now, remember messages only until the last user read them */
+				var q = ctx.MsgQueues.FirstOrDefault(queue => queue.Name == queueName && queue.UserId == userId && queue.NodeId == nodeId);
+				
+				int highestIndex = ctx.Readers.FirstOrDefault(reader => reader.UserId == userId && reader.NodeId == nodeId).Position;
+
+				foreach (Message m in q.Messages.FindAll(m => (m.MsgIdx > highestIndex)))
+				{
+					if (m.MsgIdx > highestIndex)
+						highestIndex = m.MsgIdx;
+				}
+
+				r.Position = highestIndex;
+				q.Messages.RemoveAll(m => (m.MsgIdx <= q.Readers.Min(rUser => (rUser.Position))));
 
 				ctx.SaveChanges();
 			}

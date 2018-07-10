@@ -9,7 +9,6 @@ namespace JSON
 {
 	public enum PartnerSyncMessage
 	{
-		MASTER_REQUEST,
 		PARTNER_JOIN,
 		DB_DUMP_RSP,
 		USER_CREATE,
