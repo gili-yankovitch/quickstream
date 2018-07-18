@@ -1,4 +1,5 @@
 ﻿using JSON;
+using JSON.PartnerRequests;
 using LogicServices;
 using System;
 using System.Collections.Generic;
@@ -53,6 +54,9 @@ namespace QuickStream.Handlers
 							throw new Exception("Permission denied: Invalid writer user");
 
 						QueueEngine.WriteBufferedQueue(user, node, queue, action.Data);
+
+						PartnersEngine.PartnersUpdateRequest(new PartnerSyncQueueWrite { NodeId = node, UID = user, QueueName = queue, Data = action.Data, Timestamp = DateTime.Now });
+
 						jsonResponse.Success = true;
 						jsonResponse.Message = "Success";
 					}
@@ -73,6 +77,12 @@ namespace QuickStream.Handlers
 					try
 					{
 						jsonResponse.Messages = QueueEngine.ReadQueue(action.Id, user, node, queue, action.Commit);
+
+						if (action.Commit)
+						{
+							PartnersEngine.PartnersUpdateRequest(new PartnerSyncRequestCommit { NodeId = node, UID = user, QueueName = queue, Commit = true, Timestamp = DateTime.Now });
+						}
+
 						jsonResponse.Success = true;
 					}
 					catch (Exception e)

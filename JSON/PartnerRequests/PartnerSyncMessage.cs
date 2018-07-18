@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace JSON
 {
 	[DataContract]
-	public class PartnerSyncRequest
+	public class PartnerSyncMessage
 	{
 		[DataMember] public byte[] cert;
 		[DataMember] public int certId;

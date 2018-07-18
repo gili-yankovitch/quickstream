@@ -11,5 +11,6 @@ namespace JSON.PartnerRequests
 	public class PartnerSyncResponseDBDump : BooleanResponse
 	{
 		[DataMember] public byte[] DBDump;
+		[DataMember] public string[] Partners;
 	}
 }

@@ -11,6 +11,7 @@ namespace JSON.PartnerRequests
 	public class PartnerSyncUserCreate
 	{
 		[DataMember] public int Id;
+		[DataMember] public int NodeId;
 		[DataMember] public string Key;
 	}
 }

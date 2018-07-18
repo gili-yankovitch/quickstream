@@ -3,6 +3,7 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Security.Policy;
 using JSON;
+using JSON.PartnerRequests;
 using LogicServices;
 
 namespace QuickStream.Handlers
@@ -30,6 +31,8 @@ namespace QuickStream.Handlers
 				try
 				{
 					QueueEngine.CreateQueue(queueCreateRequest.Id, queueCreateRequest.NodeId, queueCreateRequest.QueueName, queueCreateRequest.Readers);
+
+					PartnersEngine.PartnersUpdateRequest(new PartnerSyncQueueCreate { NodeId = queueCreateRequest.NodeId, UID = queueCreateRequest.Id, QueueName = queueCreateRequest.QueueName, Readers = queueCreateRequest.Readers } );
 
 					jsonResponse.Success = true;
 				}

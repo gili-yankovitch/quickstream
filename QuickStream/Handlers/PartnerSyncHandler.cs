@@ -23,9 +23,7 @@ namespace QuickStream.Handlers
 
 		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Url url)
 		{
-			var partnerSyncRequest =
-				(JSON.PartnerSyncRequest)new DataContractJsonSerializer(typeof(JSON.PartnerSyncRequest)).ReadObject(
-					request.InputStream);
+			var partnerSyncRequest = JSONSerializer<PartnerSyncMessage>.Deserialize(request.InputStream);
 
 			var jsonResponse = new BooleanResponse { Success = false };
 
@@ -38,35 +36,24 @@ namespace QuickStream.Handlers
 					throw new CryptographicException("Data verification failed");
 				}
 
-				/* Insert data to MemoryStream to parse the actual data */
-				var dataStream = new MemoryStream();
-				dataStream.Write(partnerSyncRequest.data, 0, partnerSyncRequest.data.Length);
-				dataStream.Seek(0, SeekOrigin.Begin);
-
 				/* Parse action */
-				var partnerSyncRequestData =
-					(PartnerSyncRequestData)new DataContractJsonSerializer(typeof(PartnerSyncRequestData)).ReadObject(
-					dataStream);
-
-				var partnerData = new MemoryStream();
-				partnerData.Write(partnerSyncRequestData.Data, 0, partnerSyncRequestData.Data.Length);
-				partnerData.Seek(0, SeekOrigin.Begin);
+				var partnerSyncRequestData = JSONSerializer<PartnerSyncMessageData>.Deserialize(partnerSyncRequest.data);
 
 				/* Figure out which message type need to be handled */
 				switch (partnerSyncRequestData.MessageType)
 				{
-					case PartnerSyncMessage.PARTNER_JOIN:
+					case PartnerSyncMessageType.PARTNER_JOIN:
 						{
 							/* Parse join request */
-							var partnerJoinRequest =
-									(PartnerSyncRequestJoin)new DataContractJsonSerializer(typeof(PartnerSyncRequestJoin)).ReadObject(
-									partnerData);
+							var partnerJoinRequest = JSONSerializer<PartnerSyncRequestJoin>.Deserialize(partnerSyncRequestData.Data);
 
 							/* Add to partners */
 							PartnersEngine.AddPartner(partnerJoinRequest.Address);
 
 							/* Create a DB Dump object */
-							var partnerDBDump = new PartnerSyncResponseDBDump();
+							var partnerDBDump = new PartnerSyncResponseDBDump { Partners = PartnersEngine.Partners.ToArray() };
+
+							/* Dump te DB */
 							var dbFile = File.Open(Config.DB_Filename, FileMode.Open);
 
 							using (var reader = new BinaryReader(dbFile))
@@ -75,19 +62,15 @@ namespace QuickStream.Handlers
 								partnerDBDump.DBDump = reader.ReadBytes((int)dbFile.Length);
 							}
 
-							// TODO: Return ALL MESSAGES SIGNED
-							new DataContractJsonSerializer(typeof(PartnerSyncResponseDBDump)).WriteObject(response.OutputStream,
-								partnerDBDump);
+							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(partnerDBDump), response.OutputStream);
 
 							break;
 						}
 
-					case PartnerSyncMessage.USER_CREATE:
+					case PartnerSyncMessageType.USER_CREATE:
 						{
 							/* Parse register request */
-							var userRegisterRequest =
-									(PartnerSyncUserCreate)new DataContractJsonSerializer(typeof(PartnerSyncUserCreate)).ReadObject(
-									partnerData);
+							var userRegisterRequest = JSONSerializer<PartnerSyncUserCreate>.Deserialize(partnerSyncRequestData.Data);
 
 							/* Update here */
 							UserEngine.RegisterUser(partnerSyncRequest.certId, userRegisterRequest.Id, Encoding.ASCII.GetBytes(userRegisterRequest.Key));
@@ -95,38 +78,30 @@ namespace QuickStream.Handlers
 							jsonResponse.Success = true;
 							jsonResponse.Message = "Success";
 
-							// TODO: Return ALL MESSAGES SIGNED
-							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
-								jsonResponse);
+							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
 
-					case PartnerSyncMessage.QUEUE_CREATE:
+					case PartnerSyncMessageType.QUEUE_CREATE:
 						{
 							/* Parse queue create request */
-							var queueCreateRequest =
-									(PartnerSyncQueueCreate)new DataContractJsonSerializer(typeof(PartnerSyncQueueCreate)).ReadObject(
-									partnerData);
+							var queueCreateRequest = JSONSerializer<PartnerSyncQueueCreate>.Deserialize(partnerSyncRequestData.Data);
 
 							QueueEngine.CreateQueue(queueCreateRequest.UID, queueCreateRequest.NodeId, queueCreateRequest.QueueName, queueCreateRequest.Readers);
 
 							jsonResponse.Success = true;
 							jsonResponse.Message = "Success";
 
-							// TODO: Return ALL MESSAGES SIGNED
-							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
-								jsonResponse);
+							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
 
-					case PartnerSyncMessage.QUEUE_WRITE:
+					case PartnerSyncMessageType.QUEUE_WRITE:
 						{
 							/* Parse queue write request */
-							var queueWriteRequest =
-									(PartnerSyncQueueWrite)new DataContractJsonSerializer(typeof(PartnerSyncQueueWrite)).ReadObject(
-									partnerData);
+							var queueWriteRequest = JSONSerializer<PartnerSyncQueueWrite>.Deserialize(partnerSyncRequestData.Data);
 
 							/* Add to buffered queue */
 							QueueEngine.WriteBufferedQueue(queueWriteRequest.UID, queueWriteRequest.NodeId, queueWriteRequest.QueueName, queueWriteRequest.Data, queueWriteRequest.Timestamp);
@@ -134,25 +109,19 @@ namespace QuickStream.Handlers
 							jsonResponse.Success = true;
 							jsonResponse.Message = "Success";
 
-							// TODO: Return ALL MESSAGES SIGNED
-							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
-								jsonResponse);
+							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
 
-					case PartnerSyncMessage.QUEUE_COMMIT:
+					case PartnerSyncMessageType.QUEUE_COMMIT:
 						{
 							/* Parse queue commit request */
-							var queueCommitRequest =
-									(PartnerSyncRequestCommit)new DataContractJsonSerializer(typeof(PartnerSyncRequestCommit)).ReadObject(
-									partnerData);
+							var queueCommitRequest = JSONSerializer<PartnerSyncRequestCommit>.Deserialize(partnerSyncRequestData.Data);
 
 							QueueEngine.CommitQueue(queueCommitRequest.UID, queueCommitRequest.NodeId, queueCommitRequest.QueueName);
 
-							// TODO: Return ALL MESSAGES SIGNED
-							new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
-								jsonResponse);
+							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
@@ -171,8 +140,7 @@ namespace QuickStream.Handlers
 
 				jsonResponse.Message = e.Message;
 
-				new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
-								jsonResponse);
+				JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
 			}
 		}
 	}

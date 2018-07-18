@@ -7,20 +7,21 @@ using System.Threading.Tasks;
 
 namespace JSON
 {
-	public enum PartnerSyncMessage
+	public enum PartnerSyncMessageType
 	{
 		PARTNER_JOIN,
 		DB_DUMP_RSP,
 		USER_CREATE,
 		QUEUE_CREATE,
 		QUEUE_WRITE,
-		QUEUE_COMMIT
+		QUEUE_COMMIT,
+		GENERIC_RSP
 	};
 
 	[DataContract]
-	public class PartnerSyncRequestData
+	public class PartnerSyncMessageData
 	{
-		[DataMember] public PartnerSyncMessage MessageType;
+		[DataMember] public PartnerSyncMessageType MessageType;
 
 		[DataMember] public byte[] Data;
 	}

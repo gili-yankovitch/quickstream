@@ -42,6 +42,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -52,6 +53,7 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="CryptoEngine.cs" />
+    <Compile Include="JSONSerializer.cs" />
     <Compile Include="PartnersEngine.cs" />
     <Compile Include="QueueEngine.cs" />
     <Compile Include="Singleton.cs" />
@@ -66,6 +68,10 @@
     <ProjectReference Include="..\Formats\Formats.csproj">
       <Project>{0acda34d-978e-48da-89b2-06843c6615fe}</Project>
       <Name>Formats</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JSON\JSON.csproj">
+      <Project>{1a5fc09b-0746-41fc-a764-6c7d4d76db92}</Project>
+      <Name>JSON</Name>
     </ProjectReference>
     <ProjectReference Include="..\SQLite.CodeFirst\SQLite.CodeFirst.csproj">
       <Project>{50a32fe4-0e13-4213-a373-72523cdf34d9}</Project>
