@@ -54,7 +54,7 @@ namespace QuickStream.Handlers
 							var partnerDBDump = new PartnerSyncResponseDBDump { Partners = PartnersEngine.Partners.ToArray() };
 
 							/* Dump te DB */
-							var dbFile = File.Open(Config.DB_Filename, FileMode.Open);
+							var dbFile = File.Open(Config<string>.GetInstance()["DB_Filename"], FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 
 							using (var reader = new BinaryReader(dbFile))
 							{
@@ -104,10 +104,16 @@ namespace QuickStream.Handlers
 							var queueWriteRequest = JSONSerializer<PartnerSyncQueueWrite>.Deserialize(partnerSyncRequestData.Data);
 
 							/* Add to buffered queue */
-							QueueEngine.WriteBufferedQueue(queueWriteRequest.UID, queueWriteRequest.NodeId, queueWriteRequest.QueueName, queueWriteRequest.Data, queueWriteRequest.Timestamp);
-
-							jsonResponse.Success = true;
-							jsonResponse.Message = "Success";
+							if (QueueEngine.WriteBufferedQueue(queueWriteRequest.UID, queueWriteRequest.NodeId, queueWriteRequest.QueueName, queueWriteRequest.Data, queueWriteRequest.Timestamp))
+							{
+								jsonResponse.Success = true;
+								jsonResponse.Message = "Success";
+							}
+							else
+							{
+								jsonResponse.Success = false;
+								jsonResponse.Message = "Not enough space in queue";
+							}
 
 							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
 

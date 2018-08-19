@@ -33,16 +33,16 @@ namespace QuickStream
 				CryptoEngine.GetInstance().loadCertificate("qs0.cert");
 
 				/* Add preconfigured partners */
-				foreach (var partner in Config.PARTNERS)
+				foreach (var partner in Config<string[]>.GetInstance()["PARTNERS"])
 				{
+					if (partner == string.Empty)
+						continue;
+
 					PartnersEngine.AddPartner(partner);
 				}
 
 				/* Request joining the network and load current DB from network */
-				PartnersEngine.PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config.PUBLIC_ADDRESS });
-
-				/* Start Buffer Queue Thread */
-				QueueEngine.QueueBufferStart();
+				PartnersEngine.PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"] });
 
 				var server = new AsyncHTTPServer(port);
 				server.AddHandler("/testQuery", new TestQueryHandler());

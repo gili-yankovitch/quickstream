@@ -79,11 +79,12 @@ namespace LogicServices
 
 			/* Provide certificate data */
 			msg.certId = CryptoEngine.GetInstance().Certificate.Cert.Id;
+			msg.cert = new byte[CryptoEngine.GetInstance().Certificate.Cert.Signature.ToByteArray().Length];
 			CryptoEngine.GetInstance().Certificate.Cert.Signature.ToByteArray().CopyTo(msg.cert, 0);
 			msg.key = CryptoEngine.GetInstance().Certificate.Keys.PublicKey.PublicKey.ToByteArray();
 
 			/* Copy data itself */
-			data.CopyTo(msg.data, 0);
+			msg.data = data;
 
 			var dsa = CryptoEngine.GetInstance().ECLoad(CryptoEngine.GetInstance().Certificate.Keys.PublicKey.PublicKey.ToByteArray(), CryptoEngine.GetInstance().Certificate.Keys.PrivateKey.ToByteArray());
 
@@ -95,8 +96,7 @@ namespace LogicServices
 
 		private static WebRequest Request(string url)
 		{
-			var request = WebRequest.Create(url);
-			((HttpWebRequest)request).UserAgent = "QuickStream Partner";
+			var request = WebRequest.Create(url + "partnerSync");
 			request.Method = "POST";
 			request.ContentType = "text/json";
 
@@ -117,7 +117,15 @@ namespace LogicServices
 			{
 				var request = Request(partner);
 
-				JSONSerializer<PartnerSyncMessage>.Serialize(content, request.GetRequestStream()).Close();
+				try
+				{
+					JSONSerializer<PartnerSyncMessage>.Serialize(content, request.GetRequestStream()).Close();
+				}
+				catch (WebException)
+				{
+					/* Node might be down */
+					continue;
+				}
 
 				/* Get the response */
 				var signedResponse = JSONSerializer<PartnerSyncMessage>.Deserialize(request.GetResponse().GetResponseStream());
@@ -132,7 +140,7 @@ namespace LogicServices
 
 				foreach (var newPartner in response.Partners)
 				{
-					if ((!Partners.Exists(s => s == newPartner)) && (newPartners.Exists(s => s == newPartner)))
+					if ((!Partners.Exists(s => s == newPartner)) && (newPartners.Exists(s => s == newPartner)) && (newPartner != Config<string>.GetInstance()["PUBLIC_ADDRESS"]) && (newPartner.StartsWith("http://") || newPartner.StartsWith("https://")))
 					{
 						newPartners.Add(newPartner);
 					}
@@ -143,12 +151,15 @@ namespace LogicServices
 					dbDump = response.DBDump;
 			}
 
-			/* Write DB To file */
-			var dbFile = File.Open(Config.DB_Filename, FileMode.Open);
-
-			using (var writer = new BinaryWriter(dbFile))
+			if (dbDump != null)
 			{
-				writer.Write(dbDump);
+				/* Write DB To file */
+				var dbFile = File.Open(Config<string>.GetInstance()["DB_Filename"], FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+				using (var writer = new BinaryWriter(dbFile))
+				{
+					writer.Write(dbDump);
+				}
 			}
 
 			/* Add additional partners */
@@ -190,7 +201,7 @@ namespace LogicServices
 
 		public static void DistributeToPartners(PartnerSyncRequestJoin requestJoin)
 		{
-			requestJoin.Address = Config.PUBLIC_ADDRESS;
+			requestJoin.Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"];
 
 		}
 	}

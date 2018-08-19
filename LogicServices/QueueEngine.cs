@@ -12,50 +12,40 @@ namespace LogicServices
 	public class QueueEngine
 	{
 		/* This thread ensures that messages aggregated from various partners are added to the queue in the correct order */
-		private static void QueueBuffer()
+		public static void HandleQueueBuffer()
 		{
-			while (true)
+			/* Iterate over all the queues and look for messages that expired their indexing period and should enter the queue */
+			using (var ctx = new MessagingContext())
 			{
-				/* Iterate over all the queues and look for messages that expired their indexing period and should enter the queue */
-				using (var ctx = new MessagingContext())
+				foreach (var q in ctx.MsgQueues)
 				{
-					foreach (var q in ctx.MsgQueues)
+					var messages = ctx.QueueBuffer.Where(m => (m.QueueId == q.Id));
+
+					var messageList = new List<QueueBuffer>();
+
+					foreach (var m in messages)
 					{
-						var messages = ctx.QueueBuffer.Where(m => (m.QueueId == q.Id));
-
-						var messageList = new List<QueueBuffer>();
-
-						foreach (var m in messages)
+						if (DateTime.Now.Ticks > m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"])
 						{
-							if (DateTime.Now.Ticks > m.Timestamp.Ticks + Config.QUEUE_GRACE_PERIOD)
-							{
-								/* Add this message to the queue. We assume that by now all slaves have synced */
-								messageList.Add(m);
-							}
-						}
-
-						/* Sort by time of arrival */
-						messageList.Sort((a, b) => ((int)(a.Timestamp.Ticks - b.Timestamp.Ticks)));
-
-						foreach (var m in messageList)
-						{
-							WriteQueue(ctx, m.UserId, m.NodeId, m.QueueId, m.Data);
-
-							ctx.QueueBuffer.Remove(m);
-
-							/* Important to save here for consistancy */
-							ctx.SaveChanges();
+							/* Add this message to the queue. We assume that by now all slaves have synced */
+							messageList.Add(m);
 						}
 					}
+
+					/* Sort by time of arrival */
+					messageList.Sort((a, b) => ((int)(a.Timestamp.Ticks - b.Timestamp.Ticks)));
+
+					foreach (var m in messageList)
+					{
+						WriteQueue(ctx, m.UserId, m.NodeId, m.QueueId, m.Data, m.Timestamp);
+
+						ctx.QueueBuffer.Remove(m);
+
+						/* Important to save here for consistancy */
+						ctx.SaveChanges();
+					}
 				}
-
-				Thread.Sleep((int)Config.QUEUE_GRACE_PERIOD);
 			}
-		}
-
-		public static void QueueBufferStart()
-		{
-			new Thread(new ThreadStart(QueueBuffer)).Start();
 		}
 
 		public static void CreateQueue(int userId, int nodeId, string queueName, List<List<int>> readers)
@@ -93,7 +83,25 @@ namespace LogicServices
 			}
 		}
 
-		private static void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data)
+		private static bool IsEnoughQueueSpace(MsgQueue q, string Data)
+		{
+			/* Calculate the queue size so we know if it actually enters the local queue */
+			int total_size = 0;
+
+			foreach (var m in q.Messages)
+			{
+				total_size += m.Content.Length;
+			}
+
+			if (total_size + Data.Length > Config<int>.GetInstance()["QUEUE_DATA_SIZE"])
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		private static void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data, DateTime Timestamp)
 		{
 			var u = ctx.Users.Include(user => user.Queues).FirstOrDefault(user => user.Id == userId && user.IssueNodeId == nodeId);
 
@@ -105,15 +113,15 @@ namespace LogicServices
 			if (q == null)
 				throw new Exception("Invalid queue");
 
-			q.Messages.Add(new Message { Content = Data, MsgIdx = q.TopMsgIdx++ });
+			q.Messages.Add(new Message { Content = Data, MsgIdx = q.TopMsgIdx++, Timestamp = Timestamp });
 		}
 
-		public static void WriteBufferedQueue(int userId, int nodeId, string queueName, string Data)
+		public static bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data)
 		{
-			WriteBufferedQueue(userId, nodeId, queueName, Data, DateTime.Now);
+			return WriteBufferedQueue(userId, nodeId, queueName, Data, DateTime.Now);
 		}
 
-		public static void WriteBufferedQueue(int userId, int nodeId, string queueName, string Data, DateTime Timestamp)
+		public static bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data, DateTime Timestamp)
 		{
 			using (var ctx = new MessagingContext())
 			{
@@ -127,10 +135,20 @@ namespace LogicServices
 				if (q == null)
 					throw new Exception("Invalid queue");
 
+				/* Clean old messages */
+				q.Messages.RemoveAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.Now.Ticks));
+
+				ctx.SaveChanges();
+
+				if (!IsEnoughQueueSpace(q, Data))
+					return false;
+
 				ctx.QueueBuffer.Add(new QueueBuffer { User = u, Queue = q, Timestamp = Timestamp, Data = Data });
 
 				ctx.SaveChanges();
 			}
+
+			return true;
 		}
 
 		public static void CommitQueue(int userId, int nodeId, string queueName)

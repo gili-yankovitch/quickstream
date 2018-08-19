@@ -57,6 +57,15 @@ namespace QuickStream
 			/* Find the best-fit for the given URI */
 			var handler = m_404Handler;
 			var subsetUri = context.Request.RawUrl.TrimEnd('/');
+
+			var trimDoubleSlashes = subsetUri.Replace("//", "/");
+
+			while (trimDoubleSlashes != subsetUri)
+			{
+				subsetUri = trimDoubleSlashes;
+				trimDoubleSlashes = subsetUri.Replace("//", "/");
+			}
+
 			var requestUri = subsetUri.Split('/');
 
 			for (var i = requestUri.Length - 1; i > 0; --i)

@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using SQLite.CodeFirst;
 using System.Data.Entity.ModelConfiguration.Conventions;
+using System.Threading;
+
 namespace DAL
 {
 	public class MessagingContext : AutosavingContext

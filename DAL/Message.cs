@@ -22,6 +22,9 @@ namespace DAL
 		public string Content { get; set; }
 
 		[Required]
+		public DateTime Timestamp { get; set; }
+
+		[Required]
 		[ForeignKey("QueueId")]
 		public virtual MsgQueue Queue { get; set; }
 		public int QueueId { get; set; }

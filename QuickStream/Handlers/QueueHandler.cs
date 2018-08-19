@@ -53,12 +53,18 @@ namespace QuickStream.Handlers
 						if ((user != action.Id) || (node != action.NodeId))
 							throw new Exception("Permission denied: Invalid writer user");
 
-						QueueEngine.WriteBufferedQueue(user, node, queue, action.Data);
+						if (QueueEngine.WriteBufferedQueue(user, node, queue, action.Data))
+						{
+							PartnersEngine.PartnersUpdateRequest(new PartnerSyncQueueWrite { NodeId = node, UID = user, QueueName = queue, Data = action.Data, Timestamp = DateTime.Now });
 
-						PartnersEngine.PartnersUpdateRequest(new PartnerSyncQueueWrite { NodeId = node, UID = user, QueueName = queue, Data = action.Data, Timestamp = DateTime.Now });
-
-						jsonResponse.Success = true;
-						jsonResponse.Message = "Success";
+							jsonResponse.Success = true;
+							jsonResponse.Message = "Success";
+						}
+						else
+						{
+							jsonResponse.Success = false;
+							jsonResponse.Message = "Not enough space in queue.";
+						}
 					}
 					catch (Exception e)
 					{
@@ -72,6 +78,9 @@ namespace QuickStream.Handlers
 				}
 				else if (action.Action == e_action.E_READ)
 				{
+					/* BAE Handle buffered queue */
+					QueueEngine.HandleQueueBuffer();
+
 					var jsonResponse = new QueueReadResponse { Success = false };
 
 					try

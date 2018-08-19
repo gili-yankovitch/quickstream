@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="CryptoEngine.cs" />
+    <Compile Include="Ini.cs" />
     <Compile Include="JSONSerializer.cs" />
     <Compile Include="PartnersEngine.cs" />
     <Compile Include="QueueEngine.cs" />

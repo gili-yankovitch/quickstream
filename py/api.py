@@ -101,11 +101,17 @@ if __name__ == "__main__":
 
 	print("Created queue: queue0")
 
+	print("Writing to Node 8080")
+
 	# Write data to queue
 	api.writeQueue("queue0", "Hello, world! 0")
 	api.writeQueue("queue0", "Hello, world! 1")
 
 	print("Written to queue0")
+
+	api = QuickStream("localhost", 8090)
+
+	print("Reading from Node 8090")
 
 	# Login as a different uid
 	sess = api.login(uids[0]["NodeId"], uids[0]["Id"], _PASSWORD)
