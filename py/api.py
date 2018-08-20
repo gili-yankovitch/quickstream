@@ -33,6 +33,9 @@ class QuickStream:
 			raise e
 
 		if not r["Success"]:
+			print("=" * 16 + " Error " + "=" * 16)
+			print(func)
+			print(r["Message"])
 			raise Exception("%s(): %s" % (func, r["Message"]))
 
 		return r
@@ -106,6 +109,12 @@ if __name__ == "__main__":
 	# Write data to queue
 	api.writeQueue("queue0", "Hello, world! 0")
 	api.writeQueue("queue0", "Hello, world! 1")
+
+	print("Writing a large message")
+	try:
+		api.writeQueue("queue0", "a" * 16384)
+	except:
+		print("Queue rejected out message - Too large.")
 
 	print("Written to queue0")
 

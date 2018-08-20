@@ -83,22 +83,10 @@ namespace LogicServices
 			}
 		}
 
-		private static bool IsEnoughQueueSpace(MsgQueue q, string Data)
+		private static bool IsEnoughQueueSpace(int bufferedSize, int queueContentSize, string Data)
 		{
 			/* Calculate the queue size so we know if it actually enters the local queue */
-			int total_size = 0;
-
-			foreach (var m in q.Messages)
-			{
-				total_size += m.Content.Length;
-			}
-
-			if (total_size + Data.Length > Config<int>.GetInstance()["QUEUE_DATA_SIZE"])
-			{
-				return false;
-			}
-
-			return true;
+			return bufferedSize + queueContentSize + Data.Length < Config<int>.GetInstance()["QUEUE_DATA_SIZE"];
 		}
 
 		private static void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data, DateTime Timestamp)
@@ -140,7 +128,11 @@ namespace LogicServices
 
 				ctx.SaveChanges();
 
-				if (!IsEnoughQueueSpace(q, Data))
+				var queuedMessagesSize = ctx.QueueBuffer.Where(qb => qb.QueueId == q.Id).Select(qb => qb.Data).ToList().Sum(d => d.Length);
+
+				var queueContentLength = q.Messages.Select(m => m.Content).ToList().Sum(m => m.Length);
+
+				if (!IsEnoughQueueSpace(queuedMessagesSize, queueContentLength, Data))
 					return false;
 
 				ctx.QueueBuffer.Add(new QueueBuffer { User = u, Queue = q, Timestamp = Timestamp, Data = Data });

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -127,8 +128,17 @@ namespace LogicServices
 					continue;
 				}
 
-				/* Get the response */
-				var signedResponse = JSONSerializer<PartnerSyncMessage>.Deserialize(request.GetResponse().GetResponseStream());
+				PartnerSyncMessage signedResponse;
+
+				try
+				{
+					/* Get the response */
+					signedResponse = JSONSerializer<PartnerSyncMessage>.Deserialize(request.GetResponse().GetResponseStream());
+				}
+				catch (SerializationException)
+				{
+					continue;
+				}
 
 				if (!CryptoEngine.GetInstance().verifyCertificate(signedResponse.key, signedResponse.certId, signedResponse.cert).VerifyData(signedResponse.data, signedResponse.signature))
 				{

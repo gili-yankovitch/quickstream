@@ -41,6 +41,8 @@ namespace QuickStream
 					PartnersEngine.AddPartner(partner);
 				}
 
+				Console.WriteLine("Running on port " + port);
+
 				/* Request joining the network and load current DB from network */
 				PartnersEngine.PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"] });
 
