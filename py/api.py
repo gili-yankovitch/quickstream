@@ -33,9 +33,6 @@ class QuickStream:
 			raise e
 
 		if not r["Success"]:
-			print("=" * 16 + " Error " + "=" * 16)
-			print(func)
-			print(r["Message"])
 			raise Exception("%s(): %s" % (func, r["Message"]))
 
 		return r
@@ -114,7 +111,7 @@ if __name__ == "__main__":
 	try:
 		api.writeQueue("queue0", "a" * 16384)
 	except:
-		print("Queue rejected out message - Too large.")
+		print("Queue rejected our message - Too large.")
 
 	print("Written to queue0")
 
@@ -128,4 +125,11 @@ if __name__ == "__main__":
 	print("Login (uid = %d nodeId = %d) success. SessionKey: %s" % (uids[0]["Id"], uids[0]["NodeId"], sess))
 
 	# Read from queue
+	print("Read")
+	print(api.readQueue(uids[-1]["NodeId"], uids[-1]["Id"], "queue0"))
+
+	print("Read + Commit")
+	print(api.readQueue(uids[-1]["NodeId"], uids[-1]["Id"], "queue0", commit = True))
+
+	print("Read again")
 	print(api.readQueue(uids[-1]["NodeId"], uids[-1]["Id"], "queue0"))

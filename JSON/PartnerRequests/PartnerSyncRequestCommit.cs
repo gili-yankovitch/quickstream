@@ -14,6 +14,10 @@ namespace JSON.PartnerRequests
 
 		[DataMember] public int NodeId { get; set; }
 
+		[DataMember] public int ReaderId { get; set; }
+
+		[DataMember] public int ReaderNodeId { get; set; }
+
 		[DataMember] public string QueueName { get; set; }
 
 		[DataMember] public bool Commit { get; set; }

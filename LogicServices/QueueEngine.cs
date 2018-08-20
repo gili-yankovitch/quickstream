@@ -74,7 +74,10 @@ namespace LogicServices
 					if (reader == null)
 						continue;
 
-					newQueue.Readers.Add(new Reader { User = reader, Position = newQueue.TopMsgIdx - 1 });
+					var r = new Reader { User = reader, Position = newQueue.TopMsgIdx - 1, NodeId = nodeId, UserId = userId, Queue = newQueue };
+
+					ctx.Readers.Add(r);
+					newQueue.Readers.Add(r);
 				}
 
 				u.Queues.Add(newQueue);
@@ -87,6 +90,14 @@ namespace LogicServices
 		{
 			/* Calculate the queue size so we know if it actually enters the local queue */
 			return bufferedSize + queueContentSize + Data.Length < Config<int>.GetInstance()["QUEUE_DATA_SIZE"];
+		}
+
+		private static void CleanOldMessageQueues(MessagingContext ctx, MsgQueue q)
+		{
+			/* Clean old messages */
+			q.Messages.RemoveAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.Now.Ticks));
+
+			ctx.SaveChanges();
 		}
 
 		private static void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data, DateTime Timestamp)
@@ -124,9 +135,7 @@ namespace LogicServices
 					throw new Exception("Invalid queue");
 
 				/* Clean old messages */
-				q.Messages.RemoveAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.Now.Ticks));
-
-				ctx.SaveChanges();
+				CleanOldMessageQueues(ctx, q);
 
 				var queuedMessagesSize = ctx.QueueBuffer.Where(qb => qb.QueueId == q.Id).Select(qb => qb.Data).ToList().Sum(d => d.Length);
 
@@ -143,16 +152,17 @@ namespace LogicServices
 			return true;
 		}
 
-		public static void CommitQueue(int userId, int nodeId, string queueName)
+		public static void CommitQueue(int userId, int nodeId, int readerId, int readerNodeId, string queueName)
 		{
 			using (var ctx = new MessagingContext())
 			{
-				var r = ctx.Readers.FirstOrDefault(reader => reader.UserId == userId && reader.NodeId == nodeId);
+				//var r = ctx.Readers.FirstOrDefault(reader => reader.UserId == userId && reader.NodeId == nodeId);
+				var r = ctx.Readers.FirstOrDefault(reader => reader.UserId == readerId && reader.NodeId == readerNodeId);
 
 				/* For now, remember messages only until the last user read them */
 				var q = ctx.MsgQueues.FirstOrDefault(queue => queue.Name == queueName && queue.UserId == userId && queue.NodeId == nodeId);
 				
-				int highestIndex = ctx.Readers.FirstOrDefault(reader => reader.UserId == userId && reader.NodeId == nodeId).Position;
+				int highestIndex = ctx.Readers.FirstOrDefault(reader => reader.UserId == readerId && reader.NodeId == readerNodeId).Position;
 
 				foreach (Message m in q.Messages.FindAll(m => (m.MsgIdx > highestIndex)))
 				{
@@ -187,6 +197,9 @@ namespace LogicServices
 
 				if (q == null)
 					throw new Exception("Invalid queue");
+
+				/* Clean old messages */
+				CleanOldMessageQueues(ctx, q);
 
 				var r = q.Readers.Find(uReader => (uReader.UserId == requestingUser && uReader.NodeId == nodeId));
 

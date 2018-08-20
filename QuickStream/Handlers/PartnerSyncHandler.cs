@@ -125,7 +125,10 @@ namespace QuickStream.Handlers
 							/* Parse queue commit request */
 							var queueCommitRequest = JSONSerializer<PartnerSyncRequestCommit>.Deserialize(partnerSyncRequestData.Data);
 
-							QueueEngine.CommitQueue(queueCommitRequest.UID, queueCommitRequest.NodeId, queueCommitRequest.QueueName);
+							QueueEngine.CommitQueue(queueCommitRequest.UID, queueCommitRequest.NodeId, queueCommitRequest.ReaderId, queueCommitRequest.ReaderNodeId, queueCommitRequest.QueueName);
+
+							jsonResponse.Success = true;
+							jsonResponse.Message = "Success";
 
 							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
 
