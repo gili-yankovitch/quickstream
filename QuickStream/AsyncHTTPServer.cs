@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Security.Policy;
 using System.Threading;
+using LogicServices;
 using QuickStream.Handlers;
 
 namespace QuickStream
@@ -15,10 +16,13 @@ namespace QuickStream
 		{
 			m_listener = new HttpListener();
 			m_listener.Prefixes.Add("http://+:" + port + "/");
+			m_listener.Prefixes.Add("https://+:443/");
+
 
 			m_handlers = new Dictionary<string, IServable>();
 			m_404Handler = new Error404Handler();
 			m_500Handler = new Error500Handler();
+			m_HTMLHandler = new HTMLHandler();
 		}
 
 		public void AddHandler(string uri, IServable handler)
@@ -54,6 +58,14 @@ namespace QuickStream
 
 		private void HandleRequest(HttpListenerContext context)
 		{
+			if (context.Request.Url.Port == 80)
+			{
+				context.Response.Redirect(context.Request.Url.ToString().Replace("http", "https"));
+				context.Response.OutputStream.Close();
+
+				return;
+			}
+
 			/* Find the best-fit for the given URI */
 			var handler = m_404Handler;
 			var subsetUri = context.Request.RawUrl.TrimEnd('/');
@@ -67,6 +79,7 @@ namespace QuickStream
 			}
 
 			var requestUri = subsetUri.Split('/');
+			var origuri = subsetUri;
 
 			for (var i = requestUri.Length - 1; i > 0; --i)
 			{
@@ -78,6 +91,24 @@ namespace QuickStream
 
 					/* Finish up here */
 					break;
+				}
+			}
+
+			if (origuri == "")
+			{
+				origuri = "/index.html";
+			}
+
+			if (handler == m_404Handler)
+			{
+				var html = Config<string>.GetInstance()["HTML_DIR"] + Path.DirectorySeparatorChar + origuri;
+
+				html = html.Replace("/..", "/").Replace("../", "/").Replace("/.", "/").Replace("./", "/");
+
+				/* Try to find a webpage with such a path */
+				if (File.Exists(html))
+				{
+					handler = m_HTMLHandler;
 				}
 			}
 
@@ -106,6 +137,7 @@ namespace QuickStream
 		private readonly Dictionary<string, IServable> m_handlers;
 		private IServable m_404Handler;
 		private IServable m_500Handler;
+		private IServable m_HTMLHandler;
 
 		#endregion
 	}

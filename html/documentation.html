@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>QuickStream</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Primer/9.6.0/build.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/build.css" />
+
+    <link rel="shortcut icon" href="/public/images/favicon.ico" type="image/x-icon" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta property="description" content="An awesome cloud service that integrates TravisCI with GitHub and helps open-source project owners manage their contributions"
+    />
+
+    <meta property="og:title" content="TravisBuddy">
+    <meta property="og:description" content="An awesome cloud service that integrates TravisCI with GitHub and helps open-source project owners manage their contributions"
+    />
+
+    <meta name="twitter:title" content="TravisBuddy" />
+    <meta name="twitter:description" content="An awesome cloud service that integrates TravisCI with GitHub and helps open-source project owners manage their contributions"
+    />
+
+</head>
+
+<body>
+    <header style = "background-color: #337ab7;">
+        <div class="container">
+            <nav>
+                <ul>
+                    <li>
+                      <a href="/">
+                        <h1><img style = "width: 16px; height: 16px" src="img/link.gif"> QuickStream.me</h1>
+                      </a>
+                    <li>
+                        <a href="/documentation.html">Documentation</a>
+                    </li>
+                    <li>
+                      <div style="width: 300px">&nbsp;</div>
+                    </li>
+                    <li>
+                        <a href="https://github.com/gili-yankovitch/quickstream/">Clone us on &nbsp;<img style = "width: 16px; height: 16px" src="img/mark-github.gif"></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+      <main class="no-center">
+        <div class="container">
+            <h1>Documentation</h1>
+
+            <div class="lead">
+                QuickStream uses a RESTful API for portability and ease-of-use. You can always use the python API <a href="https://github.com/gili-yankovitch/quickstream/blob/master/py/api.py">here</a>.
+            </div>
+
+            <h2>Basic Concepts</h2>
+
+            <p>
+                QuickStream deploys <b>Nodes</b> which are QS servers. Each node is a <b>Partner</b> within the QS network. Each request can be sent to any of the existing nodes, as each action is rippled accross the network to ensure stability.
+                All API calls are <span class="quote">JSON</span> over <span class="quote">POST</span> requests which yield a response containing at least one <span class="quote">boolean</span> parameter called <span class="quote">success</span>.
+            </p>
+
+            <h2>Registration</h2>
+            <p>Every action taken under QuickStream requires credentials, to distinguish between different readers and queue owners. To provide such a distinction, a user must register and supply a password as a secret.</p>
+            <h4>Request</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Key
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    A passphrase unique to the user.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Response</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Success
+                  </td>
+                  <td>
+                    Boolean
+                  </td>
+                  <td>
+                    Success Status
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    Id
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Auto generated user Id used for authentication
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    NodeId
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Part of user credentials. Identifying namespace for origin registration node.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Example</h4>
+                <pre>
+                    <h5>Request</h5>
+                    <code class="language-json">
+                      {
+                        "Key": "Aa123456"
+                      }
+
+                    </code>
+
+                    <h5>Response</h5>
+                    <code class="language-json">
+                      {
+                        "Success": True,
+                        "Id": 42,
+                        "NodeId": 0
+                      }
+
+                    </code>
+                </pre>
+
+        </div>
+    </main>
+    <footer>
+        <div class="container">
+            <a href="https://github.com/gili-yankovitch/quickstream">QuickStream</a> is an open-source project, hosted on
+            <img src="/img/mark-github-black.gif" style = "width: 16px; height: 16px">
+        </div>
+    </footer>
+</body>
+
+</html>

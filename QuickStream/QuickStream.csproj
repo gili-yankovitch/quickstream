@@ -52,6 +52,7 @@
     <Compile Include="Handlers\CreateQueueHandler.cs" />
     <Compile Include="Handlers\CreateUserHandler.cs" />
     <Compile Include="Handlers\Error500Handler.cs" />
+    <Compile Include="Handlers\HTMLHandler.cs" />
     <Compile Include="Handlers\LoginHandler.cs" />
     <Compile Include="Handlers\QueueHandler.cs" />
     <Compile Include="Handlers\PartnerSyncHandler.cs" />

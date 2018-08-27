@@ -1,0 +1,204 @@
+html {
+  font-size: 14px;
+  height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  height: 100%;
+  background-color: #fafafa;
+}
+
+header {
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.75);
+  background-color: #24292e;
+}
+
+header .buttons {
+  float: right;
+  line-height: 3rem;
+}
+
+header a {
+  color: lightgray;
+}
+
+header a {
+  color: lightgray;
+}
+
+header h1 {
+  font-size: 1.3rem;
+  float: left;
+  line-height: 3rem;
+}
+
+header nav {
+  float: left;
+  margin-left: 4.5rem;
+  line-height: 3rem;
+}
+
+header nav ul {
+  margin: 0;
+  padding: 0;
+}
+
+header nav ul li {
+  list-style: none;
+  float: left;
+}
+
+header nav ul li:not(:first-child) {
+  margin-left: 2rem;
+}
+
+section.logo {
+  margin: 3em auto;
+  text-align: center;
+}
+
+section.logo img {
+  height: 25rem;
+}
+
+section.logo.not-found img {
+  filter: grayscale(99%);
+  opacity: 0.5;
+}
+
+.background-logo {
+  position: absolute;
+  right: 0;
+  top: 75%;
+  transform: translateX(20%) translateY(-50%);
+  filter: grayscale(90%);
+  opacity: 0.05;
+}
+
+.background-logo img {
+  height: 35rem;
+}
+
+footer {
+  text-align: center;
+  margin-top: 4rem;
+  font-size: 0.9em;
+  margin-bottom: 2.5rem;
+  position: relative
+  bottom: 0px; left: 0;
+  width: 100%;
+}
+
+
+footer a {
+  font-weight: bold;
+}
+
+footer a:before {
+  content: '@';
+}
+
+footer a:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+main {
+  margin-top: 3rem;
+}
+
+.quote {
+  padding: 5px;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 3px;
+  font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  font-size: 1em;
+}
+
+.margin-top {
+  margin-top: 2.5rem;
+}
+
+form.contact-us {
+  margin-top: 2.5rem;
+}
+
+.hidden {
+  display: none;
+}
+
+@media only screen and (max-width: 500px) {
+  header nav {
+    display: none;
+  }
+
+  .container {
+    width: 100%;
+    padding: 0px 10px;
+  }
+
+  section.logo img {
+    width: 80%;
+    height: 80%;
+  }
+
+  main:not(.no-center) {
+    text-align: center;
+  }
+
+  .background-logo {
+    display: none;
+  }
+}
+
+header a
+{
+   color: #ffffff;
+}
+
+.center-parent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 90%;
+}
+
+.svg {
+  cursor: pointer;
+  filter: invert(1);
+}
+
+
+
+table {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table td, table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+table tr:nth-child(even){background-color: #f2f2f2;}
+
+table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #337ab7;
+    color: white;
+}
+
+.logo
+{
+    max-width: 100%;
+    height: auto;
+}
