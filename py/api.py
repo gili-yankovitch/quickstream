@@ -5,11 +5,11 @@ import json
 _PASSWORD = "Aa123456"
 
 class QuickStream:
-	_PROTOCOL = "http"
+	_PROTOCOL = "https"
 	E_READ = 0
 	E_WRITE = 1
 
-	def __init__(self, node, port = 8080):
+	def __init__(self, node, port = 443):
 		self.node = node
 		self.port = port
 		self.session_key = None
@@ -78,7 +78,7 @@ class QuickStream:
 		return r["Messages"]
 
 if __name__ == "__main__":
-	api = QuickStream("localhost")
+	api = QuickStream("quickstream.me")
 
 	uids = []
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
 	print("Created queue: queue0")
 
-	print("Writing to Node 8080")
+	print("Writing to Node 0")
 
 	# Write data to queue
 	api.writeQueue("queue0", "Hello, world! 0")
@@ -115,9 +115,9 @@ if __name__ == "__main__":
 
 	print("Written to queue0")
 
-	api = QuickStream("localhost", 8090)
+	# api = QuickStream("localhost", 8090)
 
-	print("Reading from Node 8090")
+	#print("Reading from Node 8090")
 
 	# Login as a different uid
 	sess = api.login(uids[0]["NodeId"], uids[0]["Id"], _PASSWORD)

@@ -262,3 +262,7 @@ __pycache__/
 
 # Ignore keys
 *.pem
+
+# Other custom rules
+*.zip
+*.psd

@@ -27,45 +27,49 @@ namespace QuickStream
 					return;
 				}
 
-			try
+			/* Something might happen. Just go on... */
+			while (true)
 			{
-				/* Load certificate */
-				CryptoEngine.GetInstance().loadCertificate("qs0.cert");
-
-				/* Add preconfigured partners */
-				foreach (var partner in Config<string[]>.GetInstance()["PARTNERS"])
+				try
 				{
-					if (partner == string.Empty)
-						continue;
+					/* Load certificate */
+					CryptoEngine.GetInstance().loadCertificate("qs0.cert");
 
-					PartnersEngine.AddPartner(partner);
+					/* Add preconfigured partners */
+					foreach (var partner in Config<string[]>.GetInstance()["PARTNERS"])
+					{
+						if (partner == string.Empty)
+							continue;
+
+						PartnersEngine.AddPartner(partner);
+					}
+
+					Console.WriteLine("Running on port " + port);
+
+					/* Request joining the network and load current DB from network */
+					PartnersEngine.PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"] });
+
+					var server = new AsyncHTTPServer(port);
+					server.AddHandler("/testQuery", new TestQueryHandler());
+					server.AddHandler("/createUser", new CreateUserHandler());
+					server.AddHandler("/createQueue", new CreateQueueHandler());
+					server.AddHandler("/partnerSync", new PartnerSyncHandler());
+					server.AddHandler("/login", new LoginHandler());
+					server.AddHandler("/queue", new QueueHandler());
+
+					server.Start();
 				}
-
-				Console.WriteLine("Running on port " + port);
-
-				/* Request joining the network and load current DB from network */
-				PartnersEngine.PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"] });
-
-				var server = new AsyncHTTPServer(port);
-				server.AddHandler("/testQuery", new TestQueryHandler());
-				server.AddHandler("/createUser", new CreateUserHandler());
-				server.AddHandler("/createQueue", new CreateQueueHandler());
-				server.AddHandler("/partnerSync", new PartnerSyncHandler());
-				server.AddHandler("/login", new LoginHandler());
-				server.AddHandler("/queue", new QueueHandler());
-
-				server.Start();
-			}
-			catch (HttpListenerException e)
-			{
-				Console.WriteLine("External port diallowed. Please run as Administrator (" + e.Message + ":");
-				Console.WriteLine("\tnetsh http add urlacl url=http://+:" + port + "/ user=\"" + Environment.UserName +
-				                  "\"");
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e);
-				Console.WriteLine(e.Message);
+				catch (HttpListenerException e)
+				{
+					Console.WriteLine("External port diallowed. Please run as Administrator (" + e.Message + ":");
+					Console.WriteLine("\tnetsh http add urlacl url=http://+:" + port + "/ user=\"" + Environment.UserName +
+									  "\"");
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e);
+					Console.WriteLine(e.Message);
+				}
 			}
 		}
 	}

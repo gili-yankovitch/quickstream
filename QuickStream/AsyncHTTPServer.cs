@@ -115,8 +115,10 @@ namespace QuickStream
 			context.Response.SendChunked = true;
 			try
 			{
+				Console.WriteLine("Access: " + context.Request.Url.ToString().Substring(context.Request.Url.ToString().IndexOf(subsetUri)));
+				
 				handler.Serve(context.Request, context.Response,
-					new Url(context.Request.Url.ToString().Substring(subsetUri.Length)));
+					new Url(context.Request.Url.ToString().Substring(context.Request.Url.ToString().IndexOf(subsetUri))));
 				context.Response.StatusCode = handler.StatusCode;
 			}
 			catch (Exception e)

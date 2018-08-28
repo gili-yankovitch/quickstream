@@ -24,13 +24,13 @@ namespace QuickStream.Handlers
 			/* Know what action is being performed */
 			var details = url.Value.Split('/');
 
-			if (!int.TryParse(details[3], out int node))
+			if (!int.TryParse(details[2], out int node))
 				node = -1;
 
-			if (!int.TryParse(details[4], out int user))
+			if (!int.TryParse(details[3], out int user))
 				user = -1;
 
-			var queue = details[5];
+			var queue = details[4];
 
 			var action =
 				(QueueRequest)new DataContractJsonSerializer(typeof(QueueRequest)).ReadObject(
@@ -51,7 +51,13 @@ namespace QuickStream.Handlers
 					try
 					{
 						if ((user != action.Id) || (node != action.NodeId))
+						{
+							Console.WriteLine("Permission denied: Invalid writer user. user = " + user + " action.Id = " + action.Id + " node = " + node + " action.NodeId = " + action.NodeId);
+							for (int i = 0; i < details.Length; ++i)
+								Console.WriteLine(details[i]);
+
 							throw new Exception("Permission denied: Invalid writer user");
+						}
 
 						if (QueueEngine.WriteBufferedQueue(user, node, queue, action.Data))
 						{

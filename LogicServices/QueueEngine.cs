@@ -95,7 +95,11 @@ namespace LogicServices
 		private static void CleanOldMessageQueues(MessagingContext ctx, MsgQueue q)
 		{
 			/* Clean old messages */
-			q.Messages.RemoveAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.Now.Ticks));
+			foreach (var m in q.Messages.FindAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.Now.Ticks)))
+			{
+				q.Messages.Remove(m);
+				ctx.Messages.Remove(m);
+			}
 
 			ctx.SaveChanges();
 		}
@@ -107,12 +111,14 @@ namespace LogicServices
 			if (u == null)
 				throw new Exception("Invalid userId");
 
-			var q = u.Queues.Find(queue => (queue.Id == queueId));
+			var q = ctx.MsgQueues.Include(queue => queue.Messages).FirstOrDefault(queue => (queue.Id == queueId));
 
 			if (q == null)
 				throw new Exception("Invalid queue");
-
+			
 			q.Messages.Add(new Message { Content = Data, MsgIdx = q.TopMsgIdx++, Timestamp = Timestamp });
+
+			ctx.SaveChanges();
 		}
 
 		public static bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data)
@@ -161,7 +167,7 @@ namespace LogicServices
 
 				/* For now, remember messages only until the last user read them */
 				var q = ctx.MsgQueues.FirstOrDefault(queue => queue.Name == queueName && queue.UserId == userId && queue.NodeId == nodeId);
-				
+
 				int highestIndex = ctx.Readers.FirstOrDefault(reader => reader.UserId == readerId && reader.NodeId == readerNodeId).Position;
 
 				foreach (Message m in q.Messages.FindAll(m => (m.MsgIdx > highestIndex)))
@@ -207,6 +213,9 @@ namespace LogicServices
 					throw new Exception("Permission denied: Invalid reader");
 
 				int highestIndex = r.Position;
+
+				//q = ctx.MsgQueues.Include(queue => queue.Messages).FirstOrDefault(queue => queue.Id == q.Id);
+				Console.WriteLine("Queue " + q.Id + " Count: " + q.Messages.Count);
 
 				foreach (Message m in q.Messages.FindAll(m => (m.MsgIdx > highestIndex)))
 				{
