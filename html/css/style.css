@@ -202,3 +202,35 @@ table th {
     max-width: 100%;
     height: auto;
 }
+
+table.code
+{
+  background-color: #f2f2f2;
+}
+
+table.code tr td
+{
+  -padding: 0px;
+}
+
+h2
+{
+  padding-top: 10px;
+}
+
+.floating-menu {
+    font-family: sans-serif;
+    -background: #f2f2f2;
+    margin-left: -220px;
+    padding: 20px;;
+    width: 200px;
+    z-index: 100;
+    position: fixed;
+    border-radius: 10px;
+}
+.floating-menu a, 
+.floating-menu h3 {
+  font-size: 1.2em;
+  display: block;
+  margin: 0 0.5em;
+}

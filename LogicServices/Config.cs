@@ -21,6 +21,7 @@ namespace LogicServices
 			this.rules["QUEUE_GRACE_PERIOD"] = new Func<object, object>(target => { return int.Parse(target.ToString()); });
 			this.rules["QUEUE_DATA_SIZE"] = new Func<object, object>(target => { return int.Parse(target.ToString()); });
 			this.rules["QUEUE_MESSAGE_MAX_AGE"] = new Func<object, object>(target => { return int.Parse(target.ToString()); });
+			this.rules["USER_MAX_QUEUES"] = new Func<object, object>(target => { return int.Parse(target.ToString()); });
 			this.rules["PARTNERS"] = new Func<object, object>(target => { return target.ToString().Split(','); });
 			this.rules[DEFAULT_RULE] = new Func<object, object>(target => { return target.ToString(); });
 		}

@@ -63,6 +63,9 @@ namespace LogicServices
 				if (u.Queues.Find(queue => (queue.Name == queueName)) != null)
 					throw new Exception("Invalid queue name: Already exists");
 
+				if (u.Queues.Count >= Config<int>.GetInstance()["USER_MAX_QUEUES"])
+					throw new Exception("User has too many queues.");
+
 				/* Create a dictionary with mapping for everyone */
 				var newQueue = new MsgQueue() { Name = queueName, TopMsgIdx = 0, Readers = new List<Reader>() };
 

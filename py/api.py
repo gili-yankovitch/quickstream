@@ -22,6 +22,7 @@ class QuickStream:
 		# If logged in already, add credentials
 		if self.session_key is not None and func != "login":
 			data["Id"] = self.uid
+			data["NodeId"] = self.nodeId
 			data["SessionKey"] = self.session_key
 
 		rsp = requests.post(self._node_url(func), data = json.dumps(data))

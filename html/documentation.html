@@ -28,6 +28,7 @@
 </head>
 
 <body>
+  <a name = "top"></a>
     <header style = "background-color: #337ab7;">
         <div class="container">
             <nav>
@@ -51,6 +52,15 @@
     </header>
       <main class="no-center">
         <div class="container">
+            <nav class="floating-menu">
+              <h3>Navigation</h3>
+              <a href="#top">Top</a>
+              <a href="#registration">Registration</a>
+              <a href="#login">Login</a>
+              <a href="#queuecreate">Queue Creation</a>
+              <a href="#queuewrite">Queue Write</a>
+              <a href="#queueread">Queue Read</a>
+            </nav>
             <h1>Documentation</h1>
 
             <div class="lead">
@@ -64,7 +74,8 @@
                 All API calls are <span class="quote">JSON</span> over <span class="quote">POST</span> requests which yield a response containing at least one <span class="quote">boolean</span> parameter called <span class="quote">success</span>.
             </p>
 
-            <h2>Registration</h2>
+            <a name = "registration"></a><h2>Registration</h2>
+            <hr>
             <p>Every action taken under QuickStream requires credentials, to distinguish between different readers and queue owners. To provide such a distinction, a user must register and supply a password as a secret.</p>
             <h4>Request</h4>
             <table data-vertable="ver1">
@@ -139,26 +150,506 @@
             </table>
 
             <h4>Example</h4>
-                <pre>
+                
                     <h5>Request</h5>
-                    <code class="language-json">
-                      {
-                        "Key": "Aa123456"
-                      }
+                    <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+  "Key": "Aa123456"
+}</code></pre></td></tr></table>
 
+                      <h5>Response</h5>
+                                        <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+    "Success": True,
+    "Id": 42,
+    "NodeId": 0
+}</code></pre></td></tr></table>
                     </code>
 
-                    <h5>Response</h5>
-                    <code class="language-json">
-                      {
-                        "Success": True,
-                        "Id": 42,
-                        "NodeId": 0
-                      }
 
+
+
+
+
+
+                    <a name = "login"></a><h2>Login</h2>
+                    <hr>
+            <p>In order to execute any action under the registered user, it is required to login with the supplied credentials</p>
+            <h4>Request</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    NodeId
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given NodeId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Id
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given UserId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Key
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Chosen Passphrase
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Response</h4>
+            <hr>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Success
+                  </td>
+                  <td>
+                    Boolean
+                  </td>
+                  <td>
+                    Success Status
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    SessionKey
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    A uniquely-generated string used to identify the current session instead of keeping passphrase in memory.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Example</h4>
+                
+                    <h5>Request</h5>
+                    <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+  "NodeId": "0"
+  "Id": "42"
+  "Key": "Aa123456"
+}</code></pre></td></tr></table>
+
+                      <h5>Response</h5>
+                                        <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+    "Success": True,
+    "SessionKey": "py702748w..."
+}</code></pre></td></tr></table>
                     </code>
-                </pre>
+                
 
+
+
+
+                    <a name = "queuecreate"></a><h2>Queue Creation</h2>
+                    <hr>
+            <p>Any user can create queues up to a configurable maximum. This query receives a queue name and a list of reader NodeId/UIDs.</p>
+            <h4>Request</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    NodeId
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given NodeId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Id
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given UserId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    SessionKey
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Received Session Id
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    QueueName
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Per user unique queue name
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Readers
+                  </td>
+                  <td>
+                    List of Tuples
+                  </td>
+                  <td>
+                    List of NodeId and UserIds in the form of: (NodeId, UserId) that are allowed to read from this queue. 
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Response</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Success
+                  </td>
+                  <td>
+                    Boolean
+                  </td>
+                  <td>
+                    Success Status
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Example</h4>
+                
+                    <h5>Request</h5>
+                    <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+  "NodeId": "0"
+  "Id": "42"
+  "SessionKey": "py702748w..."
+  "QueueName": "queue0",
+  "Readers": [(0, 1337), (0, 1338)]
+}</code></pre></td></tr></table>
+
+                      <h5>Response</h5>
+                                        <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+    "Success": True,
+}</code></pre></td></tr></table>
+                    </code>
+
+
+
+
+                    <a name="queuewrite"></a><h2>Queue Write</h2>
+                    <hr>
+            <p>Any user can write only to queues created by her. This is done addressing a path identifying the user and the specific queue: /queue/&lt;NodeId&gt;/&lt;UserId&gt;/&lt;QueueName&gt;</p>
+            <h4>Request</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    NodeId
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given NodeId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Id
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given UserId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    SessionKey
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Received Session Id
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Action
+                  </td>
+                  <td>
+                    Enum
+                  </td>
+                  <td>
+                    Read / Write Action:<br>
+                    Read = 0<br>
+                    Write = 1
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Data
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Message to write to queue
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Response</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Success
+                  </td>
+                  <td>
+                    Boolean
+                  </td>
+                  <td>
+                    Success Status
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Example</h4>
+                
+                    <h5>Request</h5>
+                    <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">POST /queue/0/42/queue0
+{
+  "NodeId": "0"
+  "Id": "42"
+  "SessionKey": "py702748w..."
+  "Action": 1
+  "Data": "Hello, world!"
+}</code></pre></td></tr></table>
+
+                      <h5>Response</h5>
+                                        <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+    "Success": True,
+}</code></pre></td></tr></table>
+                    </code>
+
+
+
+
+
+
+
+
+
+                    <a name = "queueread"></a><h2>Queue Read</h2>
+                    <hr>
+            <p>Each user granted read permission at queue creation can read from it accessing /queue/&lt;NodeId&gt;/&lt;UserId&gt;/&lt;QueueName&gt;</p>
+            <h4>Request</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    NodeId
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given NodeId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Id
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Given UserId
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    SessionKey
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Received Session Id
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Action
+                  </td>
+                  <td>
+                    Enum
+                  </td>
+                  <td>
+                    Read / Write Action:<br>
+                    Read = 0<br>
+                    Write = 1
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Commit
+                  </td>
+                  <td>
+                    Boolean
+                  </td>
+                  <td>
+                    (Optional) Tells the queue to discard any read messages for that user. Subsequent reads will not return currently read messages.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Response</h4>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Success
+                  </td>
+                  <td>
+                    Boolean
+                  </td>
+                  <td>
+                    Success Status
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Messages
+                  </td>
+                  <td>
+                    List
+                  </td>
+                  <td>
+                    A list of read messages, ordered by order of arrival to the queue.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Example</h4>
+                
+                    <h5>Request</h5>
+                    <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">POST /queue/0/42/queue0
+{
+  "NodeId": "0"
+  "Id": "42"
+  "SessionKey": "py702748w..."
+  "Action": 0
+  "Commit": True
+}</code></pre></td></tr></table>
+
+                      <h5>Response</h5>
+                                        <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px;">{
+    "Success": True,
+    "Messages": ["Hello, world!"]
+}</code></pre></td></tr></table>
+                    </code>
         </div>
     </main>
     <footer>
