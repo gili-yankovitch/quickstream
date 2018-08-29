@@ -263,8 +263,8 @@
                     <h5>Request</h5>
                     <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">{
-  "NodeId": "0"
-  "Id": "42"
+  "NodeId": "0",
+  "Id": "42",
   "Key": "Aa123456"
 }</code></pre></td></tr></table>
 
@@ -380,9 +380,9 @@
                     <h5>Request</h5>
                     <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">{
-  "NodeId": "0"
-  "Id": "42"
-  "SessionKey": "py702748w..."
+  "NodeId": "0",
+  "Id": "42",
+  "SessionKey": "py702748w...",
   "QueueName": "queue0",
   "Readers": [(0, 1337), (0, 1338)]
 }</code></pre></td></tr></table>
@@ -390,7 +390,7 @@
                       <h5>Response</h5>
                                         <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">{
-    "Success": True,
+    "Success": True
 }</code></pre></td></tr></table>
                     </code>
 
@@ -500,17 +500,17 @@
                     <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">POST /queue/0/42/queue0
 {
-  "NodeId": "0"
-  "Id": "42"
-  "SessionKey": "py702748w..."
-  "Action": 1
+  "NodeId": "0",
+  "Id": "42",
+  "SessionKey": "py702748w...",
+  "Action": 1,
   "Data": "Hello, world!"
 }</code></pre></td></tr></table>
 
                       <h5>Response</h5>
                                         <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">{
-    "Success": True,
+    "Success": True
 }</code></pre></td></tr></table>
                     </code>
 
@@ -636,10 +636,10 @@
                     <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">POST /queue/0/42/queue0
 {
-  "NodeId": "0"
-  "Id": "42"
-  "SessionKey": "py702748w..."
-  "Action": 0
+  "NodeId": "0",
+  "Id": "1337,
+  "SessionKey": "py702748w...",
+  "Action": 0,
   "Commit": True
 }</code></pre></td></tr></table>
 
