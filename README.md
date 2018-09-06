@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img width="460" height="300" src="https://raw.githubusercontent.com/gili-yankovitch/quickstream/master/html/img/logo.gif">
+  <img src="https://raw.githubusercontent.com/gili-yankovitch/quickstream/master/html/img/logo.gif">
 </p>
 
 QuickStream is a Secure Seamless Distributed Fault-Tolerant Message Queue.
