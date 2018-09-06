@@ -25,7 +25,7 @@ namespace LogicServices
 
 					foreach (var m in messages)
 					{
-						if (DateTime.Now.Ticks > m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"])
+						if (DateTime.UtcNow.Ticks + Config<long>.GetInstance()["TIMEZONE_CORRECTION"] > m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"])
 						{
 							/* Add this message to the queue. We assume that by now all slaves have synced */
 							messageList.Add(m);
@@ -98,7 +98,7 @@ namespace LogicServices
 		private static void CleanOldMessageQueues(MessagingContext ctx, MsgQueue q)
 		{
 			/* Clean old messages */
-			foreach (var m in q.Messages.FindAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.Now.Ticks)))
+			foreach (var m in q.Messages.FindAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.UtcNow.Ticks)))
 			{
 				q.Messages.Remove(m);
 				ctx.Messages.Remove(m);
@@ -126,7 +126,7 @@ namespace LogicServices
 
 		public static bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data)
 		{
-			return WriteBufferedQueue(userId, nodeId, queueName, Data, DateTime.Now);
+			return WriteBufferedQueue(userId, nodeId, queueName, Data, DateTime.UtcNow);
 		}
 
 		public static bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data, DateTime Timestamp)

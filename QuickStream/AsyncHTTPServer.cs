@@ -16,8 +16,10 @@ namespace QuickStream
 		{
 			m_listener = new HttpListener();
 			m_listener.Prefixes.Add("http://+:" + port + "/");
-			m_listener.Prefixes.Add("https://+:443/");
 
+			/* Add HTTPS listener only on domain public address */
+			if (Config<string>.GetInstance()["PUBLIC_ADDRESS"].Contains("://quickstream.me"))
+				m_listener.Prefixes.Add("https://+:443/");
 
 			m_handlers = new Dictionary<string, IServable>();
 			m_404Handler = new Error404Handler();
@@ -48,7 +50,7 @@ namespace QuickStream
 				try
 				{
 					var context = m_listener.GetContext();
-					ThreadPool.QueueUserWorkItem(o => { HandleRequest(context); });
+					ThreadPool.QueueUserWorkItem(o => { try { HandleRequest(context); } catch (Exception e) { /* Do nothing just too make sure everything continue running */ } });
 				}
 				catch (Exception e)
 				{

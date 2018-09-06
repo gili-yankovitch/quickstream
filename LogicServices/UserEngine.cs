@@ -83,7 +83,7 @@ namespace LogicServices
 		{
 			var map = "0123456789abcdefghijklmnopqrstuvwxyz";
 			var sb = new StringBuilder();
-			var r = new Random((int)DateTime.Now.Ticks);
+			var r = new Random((int)DateTime.UtcNow.Ticks);
 
 			for (int i = 0; i < SESSION_KEY_LEN; ++i)
 			{

@@ -5,18 +5,18 @@ import json
 _PASSWORD = "Aa123456"
 
 class QuickStream:
-	_PROTOCOL = "https"
 	E_READ = 0
 	E_WRITE = 1
 
-	def __init__(self, node, port = 443):
+	def __init__(self, node, port = 443, protocol = "https"):
 		self.node = node
 		self.port = port
 		self.session_key = None
 		self.uid = None
+		self.protocol = protocol
 
 	def _node_url(self, func):
-		return "%s://%s:%d/%s" % (QuickStream._PROTOCOL, self.node, self.port, func)
+		return "%s://%s:%d/%s" % (self.protocol, self.node, self.port, func)
 
 	def _action(self, func, data):
 		# If logged in already, add credentials
@@ -35,6 +35,8 @@ class QuickStream:
 
 		if not r["Success"]:
 			raise Exception("%s(): %s" % (func, r["Message"]))
+		elif "Message" in r and r["Message"] != None:
+			print(r["Message"])
 
 		return r
 
@@ -79,7 +81,7 @@ class QuickStream:
 		return r["Messages"]
 
 if __name__ == "__main__":
-	api = QuickStream("quickstream.me")
+	api = QuickStream("localhost", port = 8080, protocol = "http")
 
 	uids = []
 
@@ -116,9 +118,9 @@ if __name__ == "__main__":
 
 	print("Written to queue0")
 
-	# api = QuickStream("localhost", 8090)
+	api = QuickStream("quickstream.me")
 
-	#print("Reading from Node 8090")
+	print("Reading from Remote Node")
 
 	# Login as a different uid
 	sess = api.login(uids[0]["NodeId"], uids[0]["Id"], _PASSWORD)

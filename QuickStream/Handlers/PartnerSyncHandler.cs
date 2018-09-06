@@ -103,6 +103,9 @@ namespace QuickStream.Handlers
 							/* Parse queue write request */
 							var queueWriteRequest = JSONSerializer<PartnerSyncQueueWrite>.Deserialize(partnerSyncRequestData.Data);
 
+							/* Try to correct timezone issues */
+							Config<long>.GetInstance()["TIMEZONE_CORRECTION"] = queueWriteRequest.Timestamp.ToFileTimeUtc() - DateTime.UtcNow.ToFileTimeUtc();
+
 							/* Add to buffered queue */
 							if (QueueEngine.WriteBufferedQueue(queueWriteRequest.UID, queueWriteRequest.NodeId, queueWriteRequest.QueueName, queueWriteRequest.Data, queueWriteRequest.Timestamp))
 							{

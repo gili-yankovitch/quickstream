@@ -61,7 +61,14 @@ namespace QuickStream.Handlers
 
 						if (QueueEngine.WriteBufferedQueue(user, node, queue, action.Data))
 						{
-							PartnersEngine.PartnersUpdateRequest(new PartnerSyncQueueWrite { NodeId = node, UID = user, QueueName = queue, Data = action.Data, Timestamp = DateTime.Now });
+							var errorNodes = PartnersEngine.PartnersUpdateRequest(new PartnerSyncQueueWrite { NodeId = node, UID = user, QueueName = queue, Data = action.Data, Timestamp = DateTime.UtcNow });
+
+							if (errorNodes.Count > 0)
+							{
+								jsonResponse.Message = "Could not notify the following partners on write: " + String.Join(" ", errorNodes.ToArray() + " (Port closed?)");
+
+								Console.WriteLine(jsonResponse.Message);
+							}
 
 							jsonResponse.Success = true;
 							jsonResponse.Message = "Success";
@@ -95,7 +102,14 @@ namespace QuickStream.Handlers
 
 						if (action.Commit)
 						{
-							PartnersEngine.PartnersUpdateRequest(new PartnerSyncRequestCommit { NodeId = node, UID = user, QueueName = queue, Commit = true, Timestamp = DateTime.Now });
+							var errorNodes = PartnersEngine.PartnersUpdateRequest(new PartnerSyncRequestCommit { NodeId = node, UID = user, QueueName = queue, Commit = true, Timestamp = DateTime.UtcNow });
+
+							if (errorNodes.Count > 0)
+							{
+								jsonResponse.Message = "Could not notify the following partners on commit: " + String.Join(" ", errorNodes.ToArray() + " (Port closed?)");
+
+								Console.WriteLine(jsonResponse.Message);
+							}
 						}
 
 						jsonResponse.Success = true;

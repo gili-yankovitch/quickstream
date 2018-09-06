@@ -179,34 +179,48 @@ namespace LogicServices
 			}
 		}
 
-		public static void PartnersUpdateRequest<T>(T requestUpdate)
+		public static List<string> PartnersUpdateRequest<T>(T requestUpdate)
 		{
 			/* Build the message */
 			var content = PreparePartnerSyncRequest(PartnerMsgToType<T>(requestUpdate), JSONSerializer<T>.Serialize(requestUpdate));
 
+			var ErrNodes = new List<string>();
+
 			/* Ask each of the participants to send its database version */
 			foreach (var partner in Partners)
 			{
-				var request = Request(partner);
-
-				JSONSerializer<PartnerSyncMessage>.Serialize(content, request.GetRequestStream()).Close();
-
-				/* Get the response */
-				var signedResponse = JSONSerializer<PartnerSyncMessage>.Deserialize(request.GetResponse().GetResponseStream());
-
-				if (!CryptoEngine.GetInstance().verifyCertificate(signedResponse.key, signedResponse.certId, signedResponse.cert).VerifyData(signedResponse.data, signedResponse.signature))
+				try
 				{
-					/* Invalid response. Ignore. */
-					continue;
+					var request = Request(partner);
+
+					JSONSerializer<PartnerSyncMessage>.Serialize(content, request.GetRequestStream()).Close();
+
+					/* Get the response */
+					var signedResponse = JSONSerializer<PartnerSyncMessage>.Deserialize(request.GetResponse().GetResponseStream());
+
+					if (!CryptoEngine.GetInstance().verifyCertificate(signedResponse.key, signedResponse.certId, signedResponse.cert).VerifyData(signedResponse.data, signedResponse.signature))
+					{
+						/* Invalid response. Ignore. */
+						continue;
+					}
+
+					var response = JSONSerializer<BooleanResponse>.Deserialize(JSONSerializer<PartnerSyncMessageData>.Deserialize(signedResponse.data).Data);
+
+					if (!response.Success)
+					{
+						Console.WriteLine("Error in request...");
+
+						ErrNodes.Add(partner);
+					}
 				}
-
-				var response = JSONSerializer<BooleanResponse>.Deserialize(JSONSerializer<PartnerSyncMessageData>.Deserialize(signedResponse.data).Data);
-
-				if (!response.Success)
+				catch (Exception e)
 				{
-					Console.WriteLine("Error in request...");
+					/* Add to err nodes */
+					ErrNodes.Add(partner);
 				}
 			}
+
+			return ErrNodes;
 		}
 
 		public static void DistributeToPartners(PartnerSyncRequestJoin requestJoin)

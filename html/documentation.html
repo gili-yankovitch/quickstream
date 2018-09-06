@@ -60,6 +60,7 @@
               <a href="#queuecreate">Queue Creation</a>
               <a href="#queuewrite">Queue Write</a>
               <a href="#queueread">Queue Read</a>
+              <a href="#config">Configuration</a>
             </nav>
             <h1>Documentation</h1>
 
@@ -264,7 +265,7 @@
                     <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">{
   "NodeId": "0",
-  "Id": "42",
+  "Id": 42,
   "Key": "Aa123456"
 }</code></pre></td></tr></table>
 
@@ -381,7 +382,7 @@
                     <table class = "code"><tr><td>
                     <pre><code class="language-json" style = "padding: 0px;">{
   "NodeId": "0",
-  "Id": "42",
+  "Id": 42,
   "SessionKey": "py702748w...",
   "QueueName": "queue0",
   "Readers": [(0, 1337), (0, 1338)]
@@ -501,7 +502,7 @@
                     <pre><code class="language-json" style = "padding: 0px;">POST /queue/0/42/queue0
 {
   "NodeId": "0",
-  "Id": "42",
+  "Id": 42,
   "SessionKey": "py702748w...",
   "Action": 1,
   "Data": "Hello, world!"
@@ -637,7 +638,7 @@
                     <pre><code class="language-json" style = "padding: 0px;">POST /queue/0/42/queue0
 {
   "NodeId": "0",
-  "Id": "1337,
+  "Id": 1337,
   "SessionKey": "py702748w...",
   "Action": 0,
   "Commit": True
@@ -650,6 +651,150 @@
     "Messages": ["Hello, world!"]
 }</code></pre></td></tr></table>
                     </code>
+
+
+
+
+
+
+
+
+
+
+                    <a name = "config"></a><h2>Configuration</h2>
+                    <hr>
+            <p>Each partner / node loads a configuration file fine tuning certain behavioural aspects of this specific node. Below are the configurations.</p>
+            <table data-vertable="ver1">
+              <thead>
+                <tr>
+                  <th>Parameter Name</td>
+                  <th>Type</td>
+                  <th>Description</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    QUEUE_GRACE_PERIOD
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Queue grace period defines the network latency. This defines how much time messages are buffered until they are actually queued so messages sent to different nodes in close time frames will be ordered correctly.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    QUEUE_DATA_SIZE
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Queue size limit (in bytes) 
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    QUEUE_MESSAGE_MAX_AGE
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    # Maximum size to hold message in queue (in ns)
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    USER_MAX_QUEUS
+                  </td>
+                  <td>
+                    Int
+                  </td>
+                  <td>
+                    Maximum number of queues per user
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    PUBLIC_ADDRESS
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Public address advertising this current node
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    PARTNERS
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Comma (,) separated list of partner nodes
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    DB_Filename
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    Local database filename
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    HTML_DIR
+                  </td>
+                  <td>
+                    String
+                  </td>
+                  <td>
+                    HTML Files directory
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>Example</h4>
+                    <table class = "code"><tr><td>
+                    <pre><code class="language-json" style = "padding: 0px; max-width: 100%"># Queue grace period defines the network latency.
+# This defines how much time messages are buffered until
+# they are actually queued so messages sent to different
+# nodes in close time frames will be ordered correctly.
+QUEUE_GRACE_PERIOD=1000
+
+# Queue size limit (in bytes) 
+QUEUE_DATA_SIZE=16384
+
+# Maximum size to hold message in queue (in ms)
+QUEUE_MESSAGE_MAX_AGE=36000000
+
+# Maximum number of queues per user
+USER_MAX_QUEUES=8
+
+# Public address advertising this current node
+PUBLIC_ADDRESS=https://quickstream.me/
+
+# Comma (,) separated list of partner nodes
+PARTNERS=
+
+# Certificate Filename
+Certificate=qs1.cert
+
+# Local database filename
+DB_Filename=QuickStream.sqlite
+
+# HTML Files directory
+HTML_DIR=html\</code></pre></td></tr></table>
         </div>
     </main>
     <footer>

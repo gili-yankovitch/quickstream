@@ -33,7 +33,7 @@ namespace QuickStream
 				try
 				{
 					/* Load certificate */
-					CryptoEngine.GetInstance().loadCertificate("qs0.cert");
+					CryptoEngine.GetInstance().loadCertificate(Config<string>.GetInstance()["Certificate"]);
 
 					/* Add preconfigured partners */
 					foreach (var partner in Config<string[]>.GetInstance()["PARTNERS"])
@@ -44,7 +44,7 @@ namespace QuickStream
 						PartnersEngine.AddPartner(partner);
 					}
 
-					Console.WriteLine("Running on port " + port);
+					Console.WriteLine("Node " + CryptoEngine.GetInstance().Certificate.Cert.Id + " Running on port " + port);
 
 					/* Request joining the network and load current DB from network */
 					PartnersEngine.PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"] });
@@ -61,7 +61,7 @@ namespace QuickStream
 				}
 				catch (HttpListenerException e)
 				{
-					Console.WriteLine("External port diallowed. Please run as Administrator (" + e.Message + ":");
+					Console.WriteLine("External port diallowed. Please run as Administrator (" + e.Message + ")");
 					Console.WriteLine("\tnetsh http add urlacl url=http://+:" + port + "/ user=\"" + Environment.UserName +
 									  "\"");
 				}
