@@ -33,7 +33,7 @@ namespace QuickStream
 				try
 				{
 					/* Load certificate */
-					CryptoEngine.GetInstance().loadCertificate(Config<string>.GetInstance()["Certificate"]);
+					new CryptoEngine().loadCertificate(Config<string>.GetInstance()["Certificate"]);
 
 					/* Add preconfigured partners */
 					foreach (var partner in Config<string[]>.GetInstance()["PARTNERS"])
@@ -41,13 +41,13 @@ namespace QuickStream
 						if (partner == string.Empty)
 							continue;
 
-						PartnersEngine.AddPartner(partner);
+						new PartnersEngine().AddPartner(partner);
 					}
 
-					Console.WriteLine("Node " + CryptoEngine.GetInstance().Certificate.Cert.Id + " Running on port " + port);
+					Console.WriteLine("Node " + CryptoEngine.Certificate.Cert.Id + " Running on port " + port);
 
 					/* Request joining the network and load current DB from network */
-					PartnersEngine.PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"] });
+					new PartnersEngine().PartnerJoinRequest(new JSON.PartnerSyncRequestJoin { Address = Config<string>.GetInstance()["PUBLIC_ADDRESS"] });
 
 					var server = new AsyncHTTPServer(port);
 					server.AddHandler("/testQuery", new TestQueryHandler());

@@ -10,7 +10,7 @@ namespace LogicServices
 {
 	public class JSONSerializer<T>
 	{
-		public static byte[] Serialize(T obj)
+		public byte[] Serialize(T obj)
 		{
 			/* Create the stream */
 			var workStream = new MemoryStream();
@@ -31,7 +31,7 @@ namespace LogicServices
 			return outputData;
 		}
 
-		public static Stream Serialize(T obj, Stream s)
+		public Stream Serialize(T obj, Stream s)
 		{
 			/* Serialize */
 			new DataContractJsonSerializer(typeof(T)).WriteObject(s, obj);
@@ -39,7 +39,7 @@ namespace LogicServices
 			return s;
 		}
 
-		public static T Deserialize(byte[] input)
+		public T Deserialize(byte[] input)
 		{
 			/* Create the stream */
 			var workStream = new MemoryStream();

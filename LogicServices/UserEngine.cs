@@ -10,7 +10,7 @@ namespace LogicServices
 {
     public class UserEngine
     {
-	    private static byte[] ComputeHash(byte[] key)
+	    private byte[] ComputeHash(byte[] key)
 	    {
 		    var hash = SHA256.Create();
 		    hash.Initialize();
@@ -18,7 +18,7 @@ namespace LogicServices
 		    return hash.ComputeHash(key);
 	    }
 
-		public static int RegisterUser(int NodeId, byte[] key)
+		public int RegisterUser(int NodeId, byte[] key)
 		{
 			var u = new User { IssueNodeId = NodeId, Key = ComputeHash(key), Queues = new List<MsgQueue>() };
 
@@ -41,7 +41,7 @@ namespace LogicServices
 			return u.Id;
 		}
 
-		public static int RegisterUser(int NodeId, int UserId, byte[] key)
+		public int RegisterUser(int NodeId, int UserId, byte[] key)
 		{
 			var u = new User { Id = UserId, IssueNodeId = NodeId, Key = ComputeHash(key), Queues = new List<MsgQueue>() };
 
@@ -54,7 +54,7 @@ namespace LogicServices
 			return u.Id;
 		}
 
-		public static bool Login(int id, int nodeId, string key)
+		public bool Login(int id, int nodeId, string key)
 	    {
 		    using (var ctx = new MessagingContext())
 		    {
@@ -64,7 +64,7 @@ namespace LogicServices
 		    }
 	    }
 
-		public static bool LoginBySessionId(int id, int nodeId, string sess)
+		public bool LoginBySessionId(int id, int nodeId, string sess)
 		{
 			using (var ctx = new MessagingContext())
 			{
@@ -79,7 +79,7 @@ namespace LogicServices
 
 		private const int SESSION_KEY_LEN = 32;
 
-		private static string _generateSessionKey()
+		private string _generateSessionKey()
 		{
 			var map = "0123456789abcdefghijklmnopqrstuvwxyz";
 			var sb = new StringBuilder();
@@ -93,7 +93,7 @@ namespace LogicServices
 			return sb.ToString();
 		}
 
-		public static string generateSessionKey(int id, int nodeId)
+		public string generateSessionKey(int id, int nodeId)
 		{
 			var sess = _generateSessionKey();
 

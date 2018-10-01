@@ -11,10 +11,10 @@ using JSON.PartnerRequests;
 
 namespace LogicServices
 {
-	public class CryptoEngine : Singleton<CryptoEngine>
+	public class CryptoEngine
 	{
-		public PBCertFile Certificate { get; set; }
-		private bool initialized = false;
+		public static PBCertFile Certificate { get; set; }
+		private static bool initialized = false;
 
 		private const int HEADER_SIZE = 8;
 		private const int PUBLIC_KEY_SIZE = 64;
@@ -67,15 +67,15 @@ namespace LogicServices
 
 		public void loadCertificate(string certfile)
 		{
-			if (! this.initialized)
+			if (!CryptoEngine.initialized)
 			{
 				using (var fs = File.Open(certfile, FileMode.Open))
 				{
-					this.Certificate = new PBCertFile();
-					this.Certificate.MergeFrom(fs);
+					CryptoEngine.Certificate = new PBCertFile();
+					CryptoEngine.Certificate.MergeFrom(fs);
 				}
 
-				this.initialized = true;
+				CryptoEngine.initialized = true;
 			}
 		}
 
@@ -88,7 +88,7 @@ namespace LogicServices
 				signBuff[key.Length + i] = (byte)((certId >> (8 * i)) & 0xff);
 			}
 
-			var dsa = this.ECLoad(this.Certificate.MasterPublic.PublicKey);
+			var dsa = this.ECLoad(CryptoEngine.Certificate.MasterPublic.PublicKey);
 
 			if (!dsa.VerifyData(signBuff, signature, HashAlgorithmName.SHA256))
 			{

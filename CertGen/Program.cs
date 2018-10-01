@@ -45,7 +45,7 @@ namespace CertGen
 
 		private static PBCertificate SignCertificate(string name, PBKeyPair masterKeyPair, PBKeyPair keyPair)
 		{
-			var dsa = CryptoEngine.GetInstance().ECLoad(masterKeyPair.PublicKey.PublicKey, masterKeyPair.PrivateKey);
+			var dsa = new CryptoEngine().ECLoad(masterKeyPair.PublicKey.PublicKey, masterKeyPair.PrivateKey);
 
 			var cert = new PBCertificate
 			{

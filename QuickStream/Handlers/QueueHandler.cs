@@ -36,7 +36,7 @@ namespace QuickStream.Handlers
 				(QueueRequest)new DataContractJsonSerializer(typeof(QueueRequest)).ReadObject(
 					request.InputStream);
 
-			if (!UserEngine.LoginBySessionId(action.Id, action.NodeId, action.SessionKey))
+			if (!new UserEngine().LoginBySessionId(action.Id, action.NodeId, action.SessionKey))
 			{
 				new DataContractJsonSerializer(typeof(BooleanResponse)).WriteObject(response.OutputStream,
 						new BooleanResponse { Success = false, Message = "Failed Login" });
@@ -59,9 +59,9 @@ namespace QuickStream.Handlers
 							throw new Exception("Permission denied: Invalid writer user");
 						}
 
-						if (QueueEngine.WriteBufferedQueue(user, node, queue, action.Data))
+						if (new QueueEngine().WriteBufferedQueue(user, node, queue, action.Data))
 						{
-							var errorNodes = PartnersEngine.PartnersUpdateRequest(new PartnerSyncQueueWrite { NodeId = node, UID = user, QueueName = queue, Data = action.Data, Timestamp = DateTime.UtcNow });
+							var errorNodes = new PartnersEngine().PartnersUpdateRequest(new PartnerSyncQueueWrite { NodeId = node, UID = user, QueueName = queue, Data = action.Data, Timestamp = DateTime.UtcNow });
 
 							if (errorNodes.Count > 0)
 							{
@@ -92,17 +92,17 @@ namespace QuickStream.Handlers
 				else if (action.Action == e_action.E_READ)
 				{
 					/* BAE Handle buffered queue */
-					QueueEngine.HandleQueueBuffer();
+					new QueueEngine().HandleQueueBuffer();
 
 					var jsonResponse = new QueueReadResponse { Success = false };
 
 					try
 					{
-						jsonResponse.Messages = QueueEngine.ReadQueue(action.Id, user, node, queue, action.Commit);
+						jsonResponse.Messages = new QueueEngine().ReadQueue(action.Id, user, node, queue, action.Commit);
 
 						if (action.Commit)
 						{
-							var errorNodes = PartnersEngine.PartnersUpdateRequest(new PartnerSyncRequestCommit { NodeId = node, UID = user, QueueName = queue, Commit = true, Timestamp = DateTime.UtcNow });
+							var errorNodes = new PartnersEngine().PartnersUpdateRequest(new PartnerSyncRequestCommit { NodeId = node, UID = user, QueueName = queue, Commit = true, Timestamp = DateTime.UtcNow });
 
 							if (errorNodes.Count > 0)
 							{

@@ -10,6 +10,6 @@ namespace JSON
 	[DataContract()]
 	public class JSONResponse
 	{
-		[DataMember] public bool Success;
+		[DataMember(IsRequired = true)] public bool Success;
 	}
 }

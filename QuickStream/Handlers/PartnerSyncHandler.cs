@@ -30,14 +30,14 @@ namespace QuickStream.Handlers
 			/* Validate incoming certificate */
 			try
 			{
-				if (!CryptoEngine.GetInstance().verifyCertificate(partnerSyncRequest.key, partnerSyncRequest.certId, partnerSyncRequest.cert)
+				if (!new CryptoEngine().verifyCertificate(partnerSyncRequest.key, partnerSyncRequest.certId, partnerSyncRequest.cert)
 					.VerifyData(partnerSyncRequest.data, partnerSyncRequest.signature, HashAlgorithmName.SHA256))
 				{
 					throw new CryptographicException("Data verification failed");
 				}
 
 				/* Parse action */
-				var partnerSyncRequestData = JSONSerializer<PartnerSyncMessageData>.Deserialize(partnerSyncRequest.data);
+				var partnerSyncRequestData = new JSONSerializer<PartnerSyncMessageData>().Deserialize(partnerSyncRequest.data);
 
 				/* Figure out which message type need to be handled */
 				switch (partnerSyncRequestData.MessageType)
@@ -45,10 +45,10 @@ namespace QuickStream.Handlers
 					case PartnerSyncMessageType.PARTNER_JOIN:
 						{
 							/* Parse join request */
-							var partnerJoinRequest = JSONSerializer<PartnerSyncRequestJoin>.Deserialize(partnerSyncRequestData.Data);
+							var partnerJoinRequest = new JSONSerializer<PartnerSyncRequestJoin>().Deserialize(partnerSyncRequestData.Data);
 
 							/* Add to partners */
-							PartnersEngine.AddPartner(partnerJoinRequest.Address);
+							new PartnersEngine().AddPartner(partnerJoinRequest.Address);
 
 							/* Create a DB Dump object */
 							var partnerDBDump = new PartnerSyncResponseDBDump { Partners = PartnersEngine.Partners.ToArray() };
@@ -62,7 +62,7 @@ namespace QuickStream.Handlers
 								partnerDBDump.DBDump = reader.ReadBytes((int)dbFile.Length);
 							}
 
-							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(partnerDBDump), response.OutputStream);
+							new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(partnerDBDump), response.OutputStream);
 
 							break;
 						}
@@ -70,15 +70,15 @@ namespace QuickStream.Handlers
 					case PartnerSyncMessageType.USER_CREATE:
 						{
 							/* Parse register request */
-							var userRegisterRequest = JSONSerializer<PartnerSyncUserCreate>.Deserialize(partnerSyncRequestData.Data);
+							var userRegisterRequest = new JSONSerializer<PartnerSyncUserCreate>().Deserialize(partnerSyncRequestData.Data);
 
 							/* Update here */
-							UserEngine.RegisterUser(partnerSyncRequest.certId, userRegisterRequest.Id, Encoding.ASCII.GetBytes(userRegisterRequest.Key));
+							new UserEngine().RegisterUser(partnerSyncRequest.certId, userRegisterRequest.Id, Encoding.ASCII.GetBytes(userRegisterRequest.Key));
 
 							jsonResponse.Success = true;
 							jsonResponse.Message = "Success";
 
-							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
+							new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
@@ -86,14 +86,14 @@ namespace QuickStream.Handlers
 					case PartnerSyncMessageType.QUEUE_CREATE:
 						{
 							/* Parse queue create request */
-							var queueCreateRequest = JSONSerializer<PartnerSyncQueueCreate>.Deserialize(partnerSyncRequestData.Data);
+							var queueCreateRequest = new JSONSerializer<PartnerSyncQueueCreate>().Deserialize(partnerSyncRequestData.Data);
 
-							QueueEngine.CreateQueue(queueCreateRequest.UID, queueCreateRequest.NodeId, queueCreateRequest.QueueName, queueCreateRequest.Readers);
+							new QueueEngine().CreateQueue(queueCreateRequest.UID, queueCreateRequest.NodeId, queueCreateRequest.QueueName, queueCreateRequest.Readers);
 
 							jsonResponse.Success = true;
 							jsonResponse.Message = "Success";
 
-							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
+							new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
@@ -101,13 +101,13 @@ namespace QuickStream.Handlers
 					case PartnerSyncMessageType.QUEUE_WRITE:
 						{
 							/* Parse queue write request */
-							var queueWriteRequest = JSONSerializer<PartnerSyncQueueWrite>.Deserialize(partnerSyncRequestData.Data);
+							var queueWriteRequest = new JSONSerializer<PartnerSyncQueueWrite>().Deserialize(partnerSyncRequestData.Data);
 
 							/* Try to correct timezone issues */
 							Config<long>.GetInstance()["TIMEZONE_CORRECTION"] = queueWriteRequest.Timestamp.ToFileTimeUtc() - DateTime.UtcNow.ToFileTimeUtc();
 
 							/* Add to buffered queue */
-							if (QueueEngine.WriteBufferedQueue(queueWriteRequest.UID, queueWriteRequest.NodeId, queueWriteRequest.QueueName, queueWriteRequest.Data, queueWriteRequest.Timestamp))
+							if (new QueueEngine().WriteBufferedQueue(queueWriteRequest.UID, queueWriteRequest.NodeId, queueWriteRequest.QueueName, queueWriteRequest.Data, queueWriteRequest.Timestamp))
 							{
 								jsonResponse.Success = true;
 								jsonResponse.Message = "Success";
@@ -118,7 +118,7 @@ namespace QuickStream.Handlers
 								jsonResponse.Message = "Not enough space in queue";
 							}
 
-							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
+							new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
@@ -126,14 +126,14 @@ namespace QuickStream.Handlers
 					case PartnerSyncMessageType.QUEUE_COMMIT:
 						{
 							/* Parse queue commit request */
-							var queueCommitRequest = JSONSerializer<PartnerSyncRequestCommit>.Deserialize(partnerSyncRequestData.Data);
+							var queueCommitRequest = new JSONSerializer<PartnerSyncRequestCommit>().Deserialize(partnerSyncRequestData.Data);
 
-							QueueEngine.CommitQueue(queueCommitRequest.UID, queueCommitRequest.NodeId, queueCommitRequest.ReaderId, queueCommitRequest.ReaderNodeId, queueCommitRequest.QueueName);
+							new QueueEngine().CommitQueue(queueCommitRequest.UID, queueCommitRequest.NodeId, queueCommitRequest.ReaderId, queueCommitRequest.ReaderNodeId, queueCommitRequest.QueueName);
 
 							jsonResponse.Success = true;
 							jsonResponse.Message = "Success";
 
-							JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
+							new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(jsonResponse), response.OutputStream);
 
 							break;
 						}
@@ -152,7 +152,7 @@ namespace QuickStream.Handlers
 
 				jsonResponse.Message = e.Message;
 
-				JSONSerializer<PartnerSyncMessage>.Serialize(PartnersEngine.PrepareSignedMessage(jsonResponse), response.OutputStream);
+				new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(jsonResponse), response.OutputStream);
 			}
 		}
 	}

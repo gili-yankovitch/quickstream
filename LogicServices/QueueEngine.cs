@@ -12,7 +12,7 @@ namespace LogicServices
 	public class QueueEngine
 	{
 		/* This thread ensures that messages aggregated from various partners are added to the queue in the correct order */
-		public static void HandleQueueBuffer()
+		public void HandleQueueBuffer()
 		{
 			/* Iterate over all the queues and look for messages that expired their indexing period and should enter the queue */
 			using (var ctx = new MessagingContext())
@@ -48,7 +48,7 @@ namespace LogicServices
 			}
 		}
 
-		public static void CreateQueue(int userId, int nodeId, string queueName, List<List<int>> readers)
+		public void CreateQueue(int userId, int nodeId, string queueName, List<List<int>> readers)
 		{
 			using (var ctx = new MessagingContext())
 			{
@@ -89,13 +89,13 @@ namespace LogicServices
 			}
 		}
 
-		private static bool IsEnoughQueueSpace(int bufferedSize, int queueContentSize, string Data)
+		private bool IsEnoughQueueSpace(int bufferedSize, int queueContentSize, string Data)
 		{
 			/* Calculate the queue size so we know if it actually enters the local queue */
 			return bufferedSize + queueContentSize + Data.Length < Config<int>.GetInstance()["QUEUE_DATA_SIZE"];
 		}
 
-		private static void CleanOldMessageQueues(MessagingContext ctx, MsgQueue q)
+		private void CleanOldMessageQueues(MessagingContext ctx, MsgQueue q)
 		{
 			/* Clean old messages */
 			foreach (var m in q.Messages.FindAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.UtcNow.Ticks)))
@@ -107,7 +107,7 @@ namespace LogicServices
 			ctx.SaveChanges();
 		}
 
-		private static void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data, DateTime Timestamp)
+		private void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data, DateTime Timestamp)
 		{
 			var u = ctx.Users.Include(user => user.Queues).FirstOrDefault(user => user.Id == userId && user.IssueNodeId == nodeId);
 
@@ -124,12 +124,12 @@ namespace LogicServices
 			ctx.SaveChanges();
 		}
 
-		public static bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data)
+		public bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data)
 		{
 			return WriteBufferedQueue(userId, nodeId, queueName, Data, DateTime.UtcNow);
 		}
 
-		public static bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data, DateTime Timestamp)
+		public bool WriteBufferedQueue(int userId, int nodeId, string queueName, string Data, DateTime Timestamp)
 		{
 			using (var ctx = new MessagingContext())
 			{
@@ -161,7 +161,7 @@ namespace LogicServices
 			return true;
 		}
 
-		public static void CommitQueue(int userId, int nodeId, int readerId, int readerNodeId, string queueName)
+		public void CommitQueue(int userId, int nodeId, int readerId, int readerNodeId, string queueName)
 		{
 			using (var ctx = new MessagingContext())
 			{
@@ -186,7 +186,7 @@ namespace LogicServices
 			}
 		}
 
-		public static List<string> ReadQueue(int requestingUser, int userId, int nodeId, string queueName, bool commit)
+		public List<string> ReadQueue(int requestingUser, int userId, int nodeId, string queueName, bool commit)
 		{
 			var messages = new List<string>();
 
