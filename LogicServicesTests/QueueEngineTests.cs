@@ -6,6 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Threading;
+using DAL;
+using System.Data.SQLite;
+using System.Data;
 
 namespace LogicServices.Tests
 {
@@ -15,9 +19,29 @@ namespace LogicServices.Tests
 		[TestInitialize()]
 		public void InitializeTest()
 		{
-			var Filename = "QuickStream.sqlite";
-			if (File.Exists(Filename))
-				File.Delete(Filename);
+			Config<long>.GetInstance()["TIMEZONE_CORRECTION"] = 0;
+
+			using (SQLiteConnection connect = new SQLiteConnection(@"Data Source=QuickStream.sqlite"))
+			{
+				connect.Open();
+
+				foreach (var table in new string[] { "Users", "Readers", "Messages", "Queues", "QueueBuffers" })
+				{
+					using (SQLiteCommand fmd = connect.CreateCommand())
+					{
+						fmd.CommandText = @"DELETE FROM " + table;
+						fmd.CommandType = CommandType.Text;
+						try
+						{
+							fmd.ExecuteNonQuery();
+						}
+						catch (Exception e)
+						{
+
+						}
+					}
+				}
+			}
 		}
 
 		[TestMethod()]
@@ -28,10 +52,12 @@ namespace LogicServices.Tests
 			try
 			{
 				new QueueEngine().CreateQueue(uid + 1, 0, "Hello, world!", new List<List<int>>());
+
+				Assert.Fail("Cannot succeed. No such user.");
 			}
 			catch (Exception e)
 			{
-				Assert.Fail(e.Message);
+				
 			}
 		}
 
@@ -43,17 +69,19 @@ namespace LogicServices.Tests
 			try
 			{
 				new QueueEngine().CreateQueue(uid, 1, "Hello, world!", new List<List<int>>());
+
+				Assert.Fail("Cannot succeed. User does not exist on node 1");
 			}
 			catch (Exception e)
 			{
-				Assert.Fail(e.Message);
+				
 			}
 		}
 
 		[TestMethod()]
 		public void CreateQueueTest()
 		{
-			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			 var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
 
 			try
 			{
@@ -158,7 +186,7 @@ namespace LogicServices.Tests
 
 			try
 			{
-				new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { 0, uid1 } });
+				new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 } });
 			}
 			catch (Exception e)
 			{
@@ -175,7 +203,7 @@ namespace LogicServices.Tests
 
 			try
 			{
-				new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { 0, uid1 }, new List<int> { 0, uid2 } });
+				new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 }, new List<int> { uid2, 0 } });
 			}
 			catch (Exception e)
 			{
@@ -188,7 +216,7 @@ namespace LogicServices.Tests
 		{
 			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
 
-			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { 0, uid1 }, new List<int> { 0, uid2 } });
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>>());
 
 			try
 			{
@@ -206,7 +234,7 @@ namespace LogicServices.Tests
 			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
 			var uid1 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
 
-			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { 0, uid1 } });
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 } });
 
 			try
 			{
@@ -253,6 +281,207 @@ namespace LogicServices.Tests
 			catch
 			{
 
+			}
+		}
+
+		[TestMethod()]
+		public void ReadQueueTestNegativeUnpermittedUser()
+		{
+			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			var uid1 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 } });
+
+			try
+			{
+				new QueueEngine().WriteBufferedQueue(uid, 0, "A", "Hello, world!");
+				new QueueEngine().ReadQueue(uid1 + 1, uid, 0, "A", false);
+
+				Assert.Fail("Shouldn't be able to read with non-permitted uid");
+			}
+			catch
+			{
+
+			}
+		}
+
+		[TestMethod()]
+		public void ReadQueueTest()
+		{
+			var msg = "Hello, world!";
+			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			var uid1 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 } });
+
+			try
+			{
+				new QueueEngine().WriteBufferedQueue(uid, 0, "A", msg);
+
+				/* Wait for grace period */
+				Thread.Sleep(Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"] * 10);
+				new QueueEngine().HandleQueueBuffer();
+
+				var messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", false);
+
+				if (messages.Count != 1)
+					Assert.Fail("Invalid number of read messages");
+
+				if (messages[0] != msg)
+					Assert.Fail("Invalid read message");
+			}
+			catch (Exception e)
+			{
+				Assert.Fail(e.Message);
+			}
+		}
+
+		[TestMethod()]
+		public void ReadQueueTestNegativeNoGracePeriod()
+		{
+			var msg = "Hello, world!";
+			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			var uid1 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 } });
+
+			try
+			{
+				new QueueEngine().WriteBufferedQueue(uid, 0, "A", msg);
+
+				var messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", false);
+
+				if (messages.Count != 0)
+					Assert.Fail("Invalid number of read messages");
+			}
+			catch (Exception e)
+			{
+				Assert.Fail(e.Message);
+			}
+		}
+
+		[TestMethod()]
+		public void ReadQueueTestNoCommit()
+		{
+			var msg = "Hello, world!";
+			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			var uid1 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 } });
+
+			try
+			{
+				new QueueEngine().WriteBufferedQueue(uid, 0, "A", msg);
+
+				/* Wait for grace period */
+				Thread.Sleep(Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"]);
+				new QueueEngine().HandleQueueBuffer();
+
+				var messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", false);
+
+				if (messages.Count != 1)
+					Assert.Fail("Invalid number of read messages");
+
+				if (messages[0] != msg)
+					Assert.Fail("Invalid read message");
+
+				messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", false);
+
+				if (messages.Count != 1)
+					Assert.Fail("Invalid number of read messages");
+
+				if (messages[0] != msg)
+					Assert.Fail("Invalid read message");
+			}
+			catch (Exception e)
+			{
+				Assert.Fail(e.Message);
+			}
+		}
+
+		[TestMethod()]
+		public void ReadQueueTestCommit()
+		{
+			var msg = "Hello, world!";
+			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			var uid1 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 } });
+
+			try
+			{
+				new QueueEngine().WriteBufferedQueue(uid, 0, "A", msg);
+
+				/* Wait for grace period */
+				Thread.Sleep(Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"]);
+				new QueueEngine().HandleQueueBuffer();
+
+				var messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", true);
+
+				if (messages.Count != 1)
+					Assert.Fail("Invalid number of read messages");
+
+				if (messages[0] != msg)
+					Assert.Fail("Invalid read message");
+
+				messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", true);
+
+				if (messages.Count != 0)
+					Assert.Fail("Invalid number of read messages");
+			}
+			catch (Exception e)
+			{
+				Assert.Fail(e.Message);
+			}
+		}
+
+		[TestMethod()]
+		public void ReadQueueTestCommitMultipleUsers()
+		{
+			var msg = "Hello, world!";
+			var uid = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			var uid1 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+			var uid2 = new UserEngine().RegisterUser(0, Encoding.ASCII.GetBytes("Aa123456"));
+
+			new QueueEngine().CreateQueue(uid, 0, "A", new List<List<int>> { new List<int> { uid1, 0 }, new List<int> { uid2, 0 } });
+
+			try
+			{
+				new QueueEngine().WriteBufferedQueue(uid, 0, "A", msg);
+
+				/* Wait for grace period */
+				Thread.Sleep(Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"]);
+				new QueueEngine().HandleQueueBuffer();
+
+				var messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", true);
+
+				if (messages.Count != 1)
+					Assert.Fail("Invalid number of read messages");
+
+				if (messages[0] != msg)
+					Assert.Fail("Invalid read message");
+
+				messages = new QueueEngine().ReadQueue(uid1, uid, 0, "A", true);
+
+				if (messages.Count != 0)
+					Assert.Fail("Invalid number of read messages");
+
+				messages = new QueueEngine().ReadQueue(uid2, uid, 0, "A", true);
+
+				if (messages.Count != 1)
+					Assert.Fail("Invalid number of read messages");
+
+				if (messages[0] != msg)
+					Assert.Fail("Invalid read message");
+
+				messages = new QueueEngine().ReadQueue(uid2, uid, 0, "A", true);
+
+				if (messages.Count != 0)
+					Assert.Fail("Invalid number of read messages");
+			}
+			catch (Exception e)
+			{
+				Assert.Fail(e.Message);
 			}
 		}
 	}

@@ -16,12 +16,23 @@ namespace LogicServices.Tests
 	[TestClass()]
 	public class PartnersEngineTests
 	{
+		[TestInitialize()]
+		public void InitializeCrypto()
+		{
+			new CryptoEngine().loadCertificate("qs0.cert");
+
+			new PartnersEngine().AddPartner("http://localhost:8081");
+
+			if (File.Exists(Config<string>.GetInstance()["DB_Filename"]))
+				File.Delete(Config<string>.GetInstance()["DB_Filename"]);
+
+			File.Copy("DBDump.sqlite", Config<string>.GetInstance()["DB_Filename"]);
+		}
+
 		[TestMethod()]
 		public void PrepareSignedMessageTestPositiveMessageVerify()
 		{
 			var data = "Hello, world!";
-
-			new CryptoEngine().loadCertificate("qs0.cert");
 
 			var msg = new PartnersEngine().PrepareSignedMessage<QueueReadResponse>(new QueueReadResponse { Message = "Success", Success = true, Messages = new List<string> { data } });
 
@@ -38,8 +49,6 @@ namespace LogicServices.Tests
 		{
 			var data = "Hello, world!";
 
-			new CryptoEngine().loadCertificate("qs0.cert");
-
 			var msg = new PartnersEngine().PrepareSignedMessage<QueueReadResponse>(new QueueReadResponse { Message = "Success", Success = true, Messages = new List<string> { data } });
 
 			new CryptoEngine().loadCertificate("qs1.cert");
@@ -55,47 +64,38 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void PartnerJoinRequestTestSimpleEchoTest()
 		{
-			using (new MockServer(8081, "", (req, rsp, prm) => ""))
+			try
 			{
-				var msg = new PartnerSyncRequestJoin { Address = "localhost:8081" };
-
-				var RequestMock = new Mock<PartnersEngine>();
-
-				var SerializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-				SerializeMock.Setup(x => x.Serialize(It.IsAny<PartnerSyncMessage>())).Returns(new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(msg)));
-
-				var DeserializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-
-				new PartnersEngine().AddPartner("http://localhost:8081");
-				DeserializeMock.Setup(x => x.Deserialize(It.IsAny<byte[]>())).Returns(new PartnersEngine().PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = new byte[0], Message = "Success", Partners = { }, Success = true }));
-
-				try
+				using (new MockServer(8081, "/partnerSync", (req, rsp, prm) => rsp.Content(new JSONSerializer<PartnerSyncMessage>()
+					.Serialize(new PartnersEngine()
+								.PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = new byte[0], Message = "Success", Partners = new string[0], Success = true })))))
 				{
-					new PartnersEngine().PartnerJoinRequest(msg);
+					var msg = new PartnerSyncRequestJoin { Address = "localhost:8081" };
+
+					try
+					{
+						new PartnersEngine().PartnerJoinRequest(msg);
+					}
+					catch (Exception e)
+					{
+						Assert.Fail("Failed with: " + e.Message);
+					}
 				}
-				catch (Exception e)
-				{
-					Assert.Fail("Failed with: " + e.Message);
-				}
+			}
+			catch (Exception e)
+			{
+
 			}
 		}
 
 		[TestMethod()]
 		public void PartnerJoinRequestTestPartnersListVariants()
 		{
-			using (new MockServer(8081, "", (req, rsp, prm) => ""))
+			using (new MockServer(8081, "/partnerSync", (req, rsp, prm) => rsp.Content(new JSONSerializer<PartnerSyncMessage>()
+					.Serialize(new PartnersEngine()
+								.PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = new byte[0], Message = "Success", Partners = new string[] { "http://localhost:8081", "localhost:8081" }, Success = true })))))
 			{
 				var msg = new PartnerSyncRequestJoin { Address = "localhost:8081" };
-
-				var RequestMock = new Mock<PartnersEngine>();
-
-				var SerializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-				SerializeMock.Setup(x => x.Serialize(It.IsAny<PartnerSyncMessage>())).Returns(new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(msg)));
-
-				var DeserializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-
-				new PartnersEngine().AddPartner("http://localhost:8081");
-				DeserializeMock.Setup(x => x.Deserialize(It.IsAny<byte[]>())).Returns(new PartnersEngine().PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = new byte[0], Message = "Success", Partners = new string[] { "http://localhost:8081", "localhost:8081" }, Success = true }));
 
 				try
 				{
@@ -111,23 +111,13 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void PartnerJoinRequestTestEmptyMessage()
 		{
-			using (new MockServer(8081, "", (req, rsp, prm) => ""))
+			using (new MockServer(8081, "/partnerSync", (req, rsp, prm) => rsp.Content(new JSONSerializer<PartnerSyncMessage>()
+					.Serialize(new PartnersEngine()
+								.PrepareSignedMessage(new PartnerSyncResponseDBDump { Success = false })))))
 			{
-				var msg = new PartnerSyncRequestJoin { Address = "localhost:8081" };
-
-				var RequestMock = new Mock<PartnersEngine>();
-
-				var SerializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-				SerializeMock.Setup(x => x.Serialize(It.IsAny<PartnerSyncMessage>())).Returns(new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(msg)));
-
-				var DeserializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-
-				new PartnersEngine().AddPartner("http://localhost:8081");
-				DeserializeMock.Setup(x => x.Deserialize(It.IsAny<byte[]>())).Returns(new PartnersEngine().PrepareSignedMessage(new PartnerSyncResponseDBDump { Success = false }));
-
 				try
 				{
-					new PartnersEngine().PartnerJoinRequest(msg);
+					new PartnersEngine().PartnerJoinRequest(new PartnerSyncRequestJoin { Address = "localhost:8081" });
 				}
 				catch (Exception e)
 				{
@@ -139,23 +129,13 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void PartnerJoinRequestTestSuccessfulMessage()
 		{
-			using (new MockServer(8081, "", (req, rsp, prm) => ""))
+			using (new MockServer(8081, "/partnerSync", (req, rsp, prm) => rsp.Content(new JSONSerializer<PartnerSyncMessage>()
+					.Serialize(new PartnersEngine()
+								.PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = new byte[0], Message = "Success", Partners = new string[] { "http://localhost:8081", "http://localhost:8082" }, Success = true })))))
 			{
-				var msg = new PartnerSyncRequestJoin { Address = "localhost:8081" };
-
-				var RequestMock = new Mock<PartnersEngine>();
-
-				var SerializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-				SerializeMock.Setup(x => x.Serialize(It.IsAny<PartnerSyncMessage>())).Returns(new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(msg)));
-
-				var DeserializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-
-				new PartnersEngine().AddPartner("http://localhost:8081");
-				DeserializeMock.Setup(x => x.Deserialize(It.IsAny<byte[]>())).Returns(new PartnersEngine().PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = new byte[0], Message = "Success", Partners = new string[] { "http://localhost:8081", "localhost:8081" }, Success = true }));
-
 				try
 				{
-					new PartnersEngine().PartnerJoinRequest(msg);
+					new PartnersEngine().PartnerJoinRequest(new PartnerSyncRequestJoin { Address = "localhost:8081" });
 				}
 				catch (Exception e)
 				{
@@ -167,30 +147,18 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void PartnerJoinRequestTestDBDump()
 		{
-			using (new MockServer(8081, "", (req, rsp, prm) => ""))
+			/* Dump te DB */
+			var dbFile = File.Open("DBDump.sqlite", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+			var reader = new BinaryReader(dbFile);
+
+			using (new MockServer(8081, "/partnerSync", (req, rsp, prm) => rsp.Content(new JSONSerializer<PartnerSyncMessage>()
+					.Serialize(new PartnersEngine()
+								.PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = reader.ReadBytes((int)dbFile.Length), Message = "Success", Partners = new string[] { "http://localhost:8081", "localhost:8081" }, Success = true })))))
 			{
-				var msg = new PartnerSyncRequestJoin { Address = "localhost:8081" };
-
-				var RequestMock = new Mock<PartnersEngine>();
-
-				var SerializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-				SerializeMock.Setup(x => x.Serialize(It.IsAny<PartnerSyncMessage>())).Returns(new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(msg)));
-
-				var DeserializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-
-				new PartnersEngine().AddPartner("http://localhost:8081");
-
-				/* Dump te DB */
-				var dbFile = File.Open("DBDump.sqlite", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
-				using (var reader = new BinaryReader(dbFile))
-				{
-					DeserializeMock.Setup(x => x.Deserialize(It.IsAny<byte[]>())).Returns(new PartnersEngine().PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = reader.ReadBytes((int)dbFile.Length), Message = "Success", Partners = new string[] { "http://localhost:8081", "localhost:8081" }, Success = true }));
-				}
-
 				try
 				{
-					new PartnersEngine().PartnerJoinRequest(msg);
+					new PartnersEngine().PartnerJoinRequest(new PartnerSyncRequestJoin { Address = "localhost:8081" });
 				}
 				catch (Exception e)
 				{
@@ -202,27 +170,14 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void PartnersUpdateRequestTest()
 		{
-			using (new MockServer(8081, "", (req, rsp, prm) => ""))
+			var dbFile = File.Open(Config<string>.GetInstance()["DB_Filename"], FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+			var reader = new BinaryReader(dbFile);
+
+			using (new MockServer(8081, "/partnerSync", (req, rsp, prm) => rsp.Content(new JSONSerializer<PartnerSyncMessage>()
+					.Serialize(new PartnersEngine()
+								.PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = reader.ReadBytes((int)dbFile.Length), Message = "Success", Partners = new string[] { "http://localhost:8081", "localhost:8081" }, Success = true })))))
 			{
-				var msg = new PartnerSyncRequestJoin { Address = "localhost:8081" };
-
-				var RequestMock = new Mock<PartnersEngine>();
-
-				var SerializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-				SerializeMock.Setup(x => x.Serialize(It.IsAny<PartnerSyncMessage>())).Returns(new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(msg)));
-
-				var DeserializeMock = new Mock<JSONSerializer<PartnerSyncMessage>>();
-
-				new PartnersEngine().AddPartner("http://localhost:8081");
-
-				/* Dump te DB */
-				var dbFile = File.Open(Config<string>.GetInstance()["DB_Filename"], FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
-				using (var reader = new BinaryReader(dbFile))
-				{
-					DeserializeMock.Setup(x => x.Deserialize(It.IsAny<byte[]>())).Returns(new PartnersEngine().PrepareSignedMessage(new PartnerSyncResponseDBDump { DBDump = reader.ReadBytes((int)dbFile.Length), Message = "Success", Partners = new string[] { "http://localhost:8081", "localhost:8081" }, Success = true }));
-				}
-
 				var errorNodes = new PartnersEngine().PartnersUpdateRequest<PartnerSyncRequestJoin>(new PartnerSyncRequestJoin { Address = "localhost:8081" });
 				
 				if (errorNodes.Count != 0)
@@ -230,6 +185,8 @@ namespace LogicServices.Tests
 					Assert.Fail("Got errors from nodes: " + String.Join(" ", errorNodes));
 				}
 			}
+
+			dbFile.Close();
 		}
 	}
 }

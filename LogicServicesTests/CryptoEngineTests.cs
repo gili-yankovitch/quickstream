@@ -13,12 +13,16 @@ namespace LogicServices.Tests
 	[TestClass()]
 	public class CryptoEngineTests
 	{
+		[TestInitialize()]
+		public void InitializeCrypto()
+		{
+			new CryptoEngine().loadCertificate("qs0.cert");
+		}
+
 		[TestMethod()]
 		public void ECLoadTest()
 		{
-			new CryptoEngine().loadCertificate("qs0.cert");
-
-			var ec = new CryptoEngine().ECLoad(CryptoEngine.Certificate.MasterPublic.ToByteArray());
+			var ec = new CryptoEngine().ECLoad(CryptoEngine.Certificate.Keys.PublicKey.PublicKey.ToByteArray(), CryptoEngine.Certificate.Keys.PrivateKey.ToByteArray());
 
 			var data = Encoding.ASCII.GetBytes("Hello, world!");
 
@@ -35,8 +39,6 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void verifyCertificateTestSimpleVerifyCert()
 		{
-			new CryptoEngine().loadCertificate("qs0.cert");
-
 			try
 			{
 				new CryptoEngine().verifyCertificate(CryptoEngine.Certificate.Cert);
@@ -50,8 +52,6 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void verifyCertificateTestNegativeVerifyCert()
 		{
-			new CryptoEngine().loadCertificate("qs0.cert");
-
 			var pub = CryptoEngine.Certificate.Cert.PublicKey.ToByteArray();
 			var id = CryptoEngine.Certificate.Cert.Id;
 			var cert = CryptoEngine.Certificate.Cert.Signature.ToByteArray();
@@ -72,9 +72,7 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void verifyCertificateTestVerifyData()
 		{
-			new CryptoEngine().loadCertificate("qs0.cert");
-
-			var ec = new CryptoEngine().ECLoad(CryptoEngine.Certificate.MasterPublic.ToByteArray());
+			var ec = new CryptoEngine().ECLoad(CryptoEngine.Certificate.Keys.PublicKey.PublicKey.ToByteArray(), CryptoEngine.Certificate.Keys.PrivateKey.ToByteArray());
 
 			var data = Encoding.ASCII.GetBytes("Hello, world!");
 
@@ -89,9 +87,7 @@ namespace LogicServices.Tests
 		[TestMethod()]
 		public void verifyCertificateTestNegativeVerifyData()
 		{
-			new CryptoEngine().loadCertificate("qs0.cert");
-
-			var ec = new CryptoEngine().ECLoad(CryptoEngine.Certificate.MasterPublic.ToByteArray());
+			var ec = new CryptoEngine().ECLoad(CryptoEngine.Certificate.Keys.PublicKey.PublicKey.ToByteArray(), CryptoEngine.Certificate.Keys.PrivateKey.ToByteArray());
 
 			var data = Encoding.ASCII.GetBytes("Hello, world!");
 

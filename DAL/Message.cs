@@ -22,7 +22,7 @@ namespace DAL
 		public string Content { get; set; }
 
 		[Required]
-		public DateTime Timestamp { get; set; }
+		public long Timestamp { get; set; }
 
 		[Required]
 		[ForeignKey("QueueId")]

@@ -30,7 +30,7 @@ namespace DAL
 		public int QueueId { get; set; }
 
 		[Required]
-		public DateTime Timestamp { get; set; }
+		public long Timestamp { get; set; }
 
 		[Required]
 		public string Data { get; set; }

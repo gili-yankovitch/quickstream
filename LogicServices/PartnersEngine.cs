@@ -97,7 +97,7 @@ namespace LogicServices
 
 		private WebRequest Request(string url)
 		{
-			var request = WebRequest.Create(url + "partnerSync");
+			var request = WebRequest.Create(url + "/partnerSync");
 			request.Method = "POST";
 			request.ContentType = "text/json";
 
@@ -133,9 +133,9 @@ namespace LogicServices
 				try
 				{
 					/* Get the response */
-					signedResponse = JSONSerializer<PartnerSyncMessage>.Deserialize(request.GetResponse().GetResponseStream());
+					signedResponse = new JSONSerializer<PartnerSyncMessage>().Deserialize(request.GetResponse().GetResponseStream());
 				}
-				catch (SerializationException)
+				catch (SerializationException e)
 				{
 					continue;
 				}
@@ -156,7 +156,7 @@ namespace LogicServices
 
 				foreach (var newPartner in response.Partners)
 				{
-					if ((!Partners.Exists(s => s == newPartner)) && (newPartners.Exists(s => s == newPartner)) && (newPartner != Config<string>.GetInstance()["PUBLIC_ADDRESS"]) && (newPartner.StartsWith("http://") || newPartner.StartsWith("https://")))
+					if ((!Partners.Exists(s => s == newPartner)) && (!newPartners.Exists(s => s == newPartner)) && (newPartner != Config<string>.GetInstance()["PUBLIC_ADDRESS"]) && (newPartner.StartsWith("http://") || newPartner.StartsWith("https://")))
 					{
 						newPartners.Add(newPartner);
 					}
@@ -170,12 +170,14 @@ namespace LogicServices
 			if (dbDump != null)
 			{
 				/* Write DB To file */
-				var dbFile = File.Open(Config<string>.GetInstance()["DB_Filename"], FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+				var dbFile = File.Open(Config<string>.GetInstance()["DB_Filename"], FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
 				using (var writer = new BinaryWriter(dbFile))
 				{
 					writer.Write(dbDump);
 				}
+
+				dbFile.Close();
 			}
 
 			/* Add additional partners */
@@ -202,7 +204,7 @@ namespace LogicServices
 					new JSONSerializer<PartnerSyncMessage>().Serialize(content, request.GetRequestStream()).Close();
 
 					/* Get the response */
-					var signedResponse = JSONSerializer<PartnerSyncMessage>.Deserialize(request.GetResponse().GetResponseStream());
+					var signedResponse = new JSONSerializer<PartnerSyncMessage>().Deserialize(request.GetResponse().GetResponseStream());
 
 					if (!new CryptoEngine().verifyCertificate(signedResponse.key, signedResponse.certId, signedResponse.cert).VerifyData(signedResponse.data, signedResponse.signature))
 					{

@@ -23,7 +23,7 @@ namespace QuickStream.Handlers
 
 		public void Serve(HttpListenerRequest request, HttpListenerResponse response, Url url)
 		{
-			var partnerSyncRequest = JSONSerializer<PartnerSyncMessage>.Deserialize(request.InputStream);
+			var partnerSyncRequest = new JSONSerializer<PartnerSyncMessage>().Deserialize(request.InputStream);
 
 			var jsonResponse = new BooleanResponse { Success = false };
 
@@ -61,6 +61,8 @@ namespace QuickStream.Handlers
 								/* Hopefully DB will not be larger than 2GB */
 								partnerDBDump.DBDump = reader.ReadBytes((int)dbFile.Length);
 							}
+
+							dbFile.Close();
 
 							new JSONSerializer<PartnerSyncMessage>().Serialize(new PartnersEngine().PrepareSignedMessage(partnerDBDump), response.OutputStream);
 

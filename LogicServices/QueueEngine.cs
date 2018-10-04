@@ -25,7 +25,7 @@ namespace LogicServices
 
 					foreach (var m in messages)
 					{
-						if (DateTime.UtcNow.Ticks + Config<long>.GetInstance()["TIMEZONE_CORRECTION"] > m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"])
+						if (DateTime.UtcNow.Ticks + Config<long>.GetInstance()["TIMEZONE_CORRECTION"] > m.Timestamp + Config<int>.GetInstance()["QUEUE_GRACE_PERIOD"])
 						{
 							/* Add this message to the queue. We assume that by now all slaves have synced */
 							messageList.Add(m);
@@ -33,7 +33,7 @@ namespace LogicServices
 					}
 
 					/* Sort by time of arrival */
-					messageList.Sort((a, b) => ((int)(a.Timestamp.Ticks - b.Timestamp.Ticks)));
+					messageList.Sort((a, b) => ((int)(a.Timestamp - b.Timestamp)));
 
 					foreach (var m in messageList)
 					{
@@ -98,7 +98,7 @@ namespace LogicServices
 		private void CleanOldMessageQueues(MessagingContext ctx, MsgQueue q)
 		{
 			/* Clean old messages */
-			foreach (var m in q.Messages.FindAll(m => (m.Timestamp.Ticks + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.UtcNow.Ticks)))
+			foreach (var m in q.Messages.FindAll(m => (m.Timestamp + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.UtcNow.Ticks)))
 			{
 				q.Messages.Remove(m);
 				ctx.Messages.Remove(m);
@@ -107,7 +107,7 @@ namespace LogicServices
 			ctx.SaveChanges();
 		}
 
-		private void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data, DateTime Timestamp)
+		private void WriteQueue(MessagingContext ctx, int userId, int nodeId, int queueId, string Data, long Timestamp)
 		{
 			var u = ctx.Users.Include(user => user.Queues).FirstOrDefault(user => user.Id == userId && user.IssueNodeId == nodeId);
 
@@ -119,7 +119,7 @@ namespace LogicServices
 			if (q == null)
 				throw new Exception("Invalid queue");
 			
-			q.Messages.Add(new Message { Content = Data, MsgIdx = q.TopMsgIdx++, Timestamp = Timestamp });
+			q.Messages.Add(new Message { Content = Data, MsgIdx = q.TopMsgIdx++, Timestamp = Timestamp , QueueId = queueId, Queue = q });
 
 			ctx.SaveChanges();
 		}
@@ -153,7 +153,7 @@ namespace LogicServices
 				if (!IsEnoughQueueSpace(queuedMessagesSize, queueContentLength, Data))
 					return false;
 
-				ctx.QueueBuffer.Add(new QueueBuffer { User = u, Queue = q, Timestamp = Timestamp, Data = Data });
+				ctx.QueueBuffer.Add(new QueueBuffer { User = u, Queue = q, Timestamp = Timestamp.Ticks, Data = Data });
 
 				ctx.SaveChanges();
 			}
@@ -234,7 +234,11 @@ namespace LogicServices
 					r.Position = highestIndex;
 
 					/* For now, remember messages only until the last user read them */
-					q.Messages.RemoveAll(m => (m.MsgIdx <= q.Readers.Min(rUser => (rUser.Position))));
+					foreach (var m in q.Messages.FindAll(m => (m.MsgIdx <= q.Readers.Min(rUser => (rUser.Position)))))
+					{
+						q.Messages.Remove(m);
+						ctx.Messages.Remove(m);
+					}
 				}
 
 				ctx.SaveChanges();
