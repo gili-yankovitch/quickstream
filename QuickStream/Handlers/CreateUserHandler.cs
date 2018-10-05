@@ -9,7 +9,7 @@ using LogicServices;
 
 namespace QuickStream.Handlers
 {
-	internal class CreateUserHandler : IServable
+	public class CreateUserHandler : IServable
 	{
 		public string ContentType => "text/json";
 

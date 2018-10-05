@@ -15,7 +15,7 @@ using LogicServices;
 
 namespace QuickStream.Handlers
 {
-	class PartnerSyncHandler : IServable
+	public class PartnerSyncHandler : IServable
 	{
 		public string ContentType => "text/json";
 

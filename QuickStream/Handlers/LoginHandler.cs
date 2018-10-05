@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace QuickStream.Handlers
 {
-	class LoginHandler : IServable
+	public class LoginHandler : IServable
 	{
 		public string ContentType => "text/json";
 

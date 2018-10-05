@@ -9,7 +9,7 @@ using NDesk.Options;
 
 namespace CertGen
 {
-	internal class Program
+	public class Program
 	{
 		private const string KEYNAME = "KeyPair";
 
@@ -17,7 +17,7 @@ namespace CertGen
 		private const int PUBLIC_KEY_SIZE = 64;
 		private const int PRIVATE_KEY_SIZE = 32;
 
-		private static PBKeyPair GenerateKeyPair()
+		public static PBKeyPair GenerateKeyPair()
 		{
 			var pbKeyPair = new PBKeyPair();
 
@@ -43,7 +43,7 @@ namespace CertGen
 			return pbKeyPair;
 		}
 
-		private static PBCertificate SignCertificate(string name, PBKeyPair masterKeyPair, PBKeyPair keyPair)
+		public static PBCertificate SignCertificate(string name, PBKeyPair masterKeyPair, PBKeyPair keyPair)
 		{
 			var dsa = new CryptoEngine().ECLoad(masterKeyPair.PublicKey.PublicKey, masterKeyPair.PrivateKey);
 

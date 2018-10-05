@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using DAL;
 using System.IO;
+using System.Data.SQLite;
+using System.Data;
 
 namespace LogicServices.Tests
 {
@@ -16,9 +18,27 @@ namespace LogicServices.Tests
 		[TestInitialize()]
 		public void InitializeTest()
 		{
-			var Filename = "QuickStream.sqlite";
-			if (File.Exists(Filename))
-				File.Delete(Filename);
+			using (SQLiteConnection connect = new SQLiteConnection(@"Data Source=QuickStream.sqlite"))
+			{
+				connect.Open();
+
+				foreach (var table in new string[] { "Users", "Readers", "Messages", "Queues", "QueueBuffers" })
+				{
+					using (SQLiteCommand fmd = connect.CreateCommand())
+					{
+						fmd.CommandText = @"DELETE FROM " + table;
+						fmd.CommandType = CommandType.Text;
+						try
+						{
+							fmd.ExecuteNonQuery();
+						}
+						catch (Exception e)
+						{
+
+						}
+					}
+				}
+			}
 		}
 
 		[TestMethod()]

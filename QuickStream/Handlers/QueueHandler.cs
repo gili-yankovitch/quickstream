@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace QuickStream.Handlers
 {
-	class QueueHandler : IServable
+	public class QueueHandler : IServable
 	{
 		public string ContentType => "text/json";
 

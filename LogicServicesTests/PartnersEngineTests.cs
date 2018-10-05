@@ -22,11 +22,6 @@ namespace LogicServices.Tests
 			new CryptoEngine().loadCertificate("qs0.cert");
 
 			new PartnersEngine().AddPartner("http://localhost:8081");
-
-			if (File.Exists(Config<string>.GetInstance()["DB_Filename"]))
-				File.Delete(Config<string>.GetInstance()["DB_Filename"]);
-
-			File.Copy("DBDump.sqlite", Config<string>.GetInstance()["DB_Filename"]);
 		}
 
 		[TestMethod()]
