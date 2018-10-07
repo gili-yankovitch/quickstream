@@ -58,6 +58,11 @@ namespace QuickStream
 				}
 		}
 
+		public void Stop()
+		{
+			m_listener.Stop();
+		}
+
 		private void HandleRequest(HttpListenerContext context)
 		{
 			if (context.Request.Url.Port == 80)

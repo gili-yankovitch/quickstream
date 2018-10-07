@@ -98,7 +98,7 @@ namespace LogicServices
 		private void CleanOldMessageQueues(MessagingContext ctx, MsgQueue q)
 		{
 			/* Clean old messages */
-			foreach (var m in q.Messages.FindAll(m => (m.Timestamp + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"] < DateTime.UtcNow.Ticks)))
+			foreach (var m in q.Messages.FindAll(m => ((m.Timestamp + Config<int>.GetInstance()["QUEUE_MESSAGE_MAX_AGE"]) / 100 < DateTime.UtcNow.Ticks / 100)))
 			{
 				q.Messages.Remove(m);
 				ctx.Messages.Remove(m);

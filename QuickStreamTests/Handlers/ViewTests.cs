@@ -21,6 +21,7 @@ namespace QuickStream.Handlers.Tests
 	public class ViewTests
 	{
 		private Thread WebserverThread = null;
+		private AsyncHTTPServer httpServer = null;
 
 		private void VerifyGenerateCert()
 		{
@@ -69,55 +70,62 @@ namespace QuickStream.Handlers.Tests
 			}
 		}
 
-		public ViewTests()
+		[TestInitialize()]
+		public void TestStart()
 		{
 			VerifyGenerateCert();
 
-			WebserverThread = new Thread(() =>
-			{
-				try
-				{
-					/* Load certificate */
-					new CryptoEngine().loadCertificate(Config<string>.GetInstance()["Certificate"]);
+			ResetDB();
 
-					/* Add preconfigured partners */
-					foreach (var partner in Config<string[]>.GetInstance()["PARTNERS"])
+			if (WebserverThread == null)
+				WebserverThread = new Thread(() =>
+				{
+					try
 					{
-						if (partner == string.Empty)
-							continue;
+						/* Load certificate */
+						new CryptoEngine().loadCertificate(Config<string>.GetInstance()["Certificate"]);
 
-						new PartnersEngine().AddPartner(partner);
+						/* Add preconfigured partners */
+						foreach (var partner in Config<string[]>.GetInstance()["PARTNERS"])
+						{
+							if (partner == string.Empty)
+								continue;
+
+							new PartnersEngine().AddPartner(partner);
+						}
+
+						var server = httpServer = new AsyncHTTPServer(8080);
+						server.AddHandler("/testQuery", new TestQueryHandler());
+						server.AddHandler("/createUser", new CreateUserHandler());
+						server.AddHandler("/createQueue", new CreateQueueHandler());
+						server.AddHandler("/partnerSync", new PartnerSyncHandler());
+						server.AddHandler("/login", new LoginHandler());
+						server.AddHandler("/queue", new QueueHandler());
+
+						server.Start();
 					}
-
-					var server = new AsyncHTTPServer(8080);
-					server.AddHandler("/testQuery", new TestQueryHandler());
-					server.AddHandler("/createUser", new CreateUserHandler());
-					server.AddHandler("/createQueue", new CreateQueueHandler());
-					server.AddHandler("/partnerSync", new PartnerSyncHandler());
-					server.AddHandler("/login", new LoginHandler());
-					server.AddHandler("/queue", new QueueHandler());
-
-					server.Start();
-				}
-				catch (Exception e)
-				{
-					Assert.Fail("Failed initializing: " + e.Message);
-				}
-			});
+					catch (ThreadAbortException e)
+					{
+					}
+					catch (Exception e)
+					{
+						Assert.Fail("Failed initializing: " + e.Message);
+					}
+				});
 
 			WebserverThread.Start();
+
+			Thread.Sleep(1000);
 		}
 
-		~ViewTests()
+		[TestCleanup()]
+		public void CleanupTest()
 		{
 			if (WebserverThread != null)
+			{
+				httpServer.Stop();
 				WebserverThread.Abort();
-		}
-
-		[TestInitialize()]
-		public void InitTest()
-		{
-			ResetDB();
+			}
 		}
 
 		private WebRequest Request(string url)
@@ -174,6 +182,11 @@ namespace QuickStream.Handlers.Tests
 		private QueueReadResponse WriteQueue(int nodeId, int uid, string sessionKey, string name, string data)
 		{
 			return JSONTransaction<QueueRequest, QueueReadResponse>("http://localhost:8080/queue/" + nodeId.ToString() + "/" + uid.ToString() + "/" + name, new QueueRequest { Id = uid, NodeId = nodeId, SessionKey = sessionKey, Action = e_action.E_WRITE, Data = data });
+		}
+
+		private QueueReadResponse ReadQueue(int readerNodeId, int readerUID, string readerSessionKey, int nodeId, int uid, string name, bool commit = false)
+		{
+			return JSONTransaction<QueueRequest, QueueReadResponse>("http://localhost:8080/queue/" + nodeId.ToString() + "/" + uid.ToString() + "/" + name, new QueueRequest { Id = readerUID, NodeId = readerNodeId, SessionKey = readerSessionKey, Action = e_action.E_READ, Commit = commit });
 		}
 
 		[TestMethod()]
@@ -254,7 +267,7 @@ namespace QuickStream.Handlers.Tests
 			if (!session.Success)
 				Assert.Fail("Failed logging in");
 
-			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session.SessionKey, "A", new List<List<int>> { new List<int> { uid1.Id, 1 } });
+			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session.SessionKey, "A", new List<List<int>> { new List<int> { uid1.Id, uid1.NodeId } });
 
 			if (!newQueue.Success)
 				Assert.Fail("Failed creating new queue");
@@ -279,14 +292,14 @@ namespace QuickStream.Handlers.Tests
 			if (!session.Success)
 				Assert.Fail("Failed logging in");
 
-			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session.SessionKey, "A", new List<List<int>> { new List<int> { uid1.Id, 2 } });
+			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session.SessionKey, "A", new List<List<int>> { new List<int> { uid1.Id, uid1.NodeId + 1 } });
 
 			if (!newQueue.Success)
 				Assert.Fail("Failed creating new queue");
 		}
 
 		[TestMethod()]
-		public void WriteQueue()
+		public void WriteQueueTest()
 		{
 			string passphrase = "Aa123456";
 			var uid0 = RegisterNewUser(passphrase);
@@ -299,7 +312,7 @@ namespace QuickStream.Handlers.Tests
 			if (!session.Success)
 				Assert.Fail("Failed logging in");
 
-			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session.SessionKey, "A", new List<List<int>> {  });
+			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session.SessionKey, "A", new List<List<int>> { });
 
 			if (!newQueue.Success)
 				Assert.Fail("Failed creating new queue");
@@ -308,6 +321,159 @@ namespace QuickStream.Handlers.Tests
 
 			if (!writeResponse.Success)
 				Assert.Fail("Failed writing to my own queue");
+		}
+
+		[TestMethod()]
+		public void ReadQueueTest()
+		{
+			string passphrase = "Aa123456";
+			var msg = "Hello, world!";
+			var uid0 = RegisterNewUser(passphrase);
+
+			if ((!uid0.Success) || (uid0.Id != 0))
+				Assert.Fail("Unexpected result registering uid 0");
+
+			var uid1 = RegisterNewUser(passphrase);
+
+			if ((!uid1.Success) || (uid1.Id != 1))
+				Assert.Fail("Unexpected result registering uid 0");
+
+			var session0 = Login(uid0.NodeId, uid0.Id, passphrase);
+
+			if (!session0.Success)
+				Assert.Fail("Failed logging in");
+
+			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session0.SessionKey, "A", new List<List<int>> { new List<int> { uid1.Id, uid1.NodeId } });
+
+			if (!newQueue.Success)
+				Assert.Fail("Failed creating new queue");
+
+			var writeResponse = WriteQueue(uid0.NodeId, uid0.Id, session0.SessionKey, "A", msg);
+
+			if (!writeResponse.Success)
+				Assert.Fail("Failed writing to my own queue");
+
+			var session1 = Login(uid1.NodeId, uid1.Id, passphrase);
+
+			if (!session1.Success)
+				Assert.Fail("Failed logging in");
+
+			var readResponse = ReadQueue(uid1.NodeId, uid1.Id, session1.SessionKey, uid0.NodeId, uid0.Id, "A");
+
+			if ((!readResponse.Success) || (readResponse.Messages.Count != 1) || (readResponse.Messages[0] != msg))
+				Assert.Fail("Failed reader message from queue");
+		}
+
+		[TestMethod()]
+		public void ReadQueueCommitTest()
+		{
+			string passphrase = "Aa123456";
+			var msg = "Hello, world!";
+			var uid0 = RegisterNewUser(passphrase);
+
+			if ((!uid0.Success) || (uid0.Id != 0))
+				Assert.Fail("Unexpected result registering uid 0");
+
+			var uid1 = RegisterNewUser(passphrase);
+
+			if ((!uid1.Success) || (uid1.Id != 1))
+				Assert.Fail("Unexpected result registering uid 1");
+
+			var uid2 = RegisterNewUser(passphrase);
+
+			if ((!uid2.Success) || (uid2.Id != 2))
+				Assert.Fail("Unexpected result registering uid 2");
+
+			var session0 = Login(uid0.NodeId, uid0.Id, passphrase);
+
+			if (!session0.Success)
+				Assert.Fail("Failed logging in");
+
+			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session0.SessionKey, "A", new List<List<int>> { new List<int> { uid1.Id, uid1.NodeId }, new List<int> { uid2.Id, uid2.NodeId } });
+
+			if (!newQueue.Success)
+				Assert.Fail("Failed creating new queue");
+
+			var writeResponse = WriteQueue(uid0.NodeId, uid0.Id, session0.SessionKey, "A", msg);
+
+			if (!writeResponse.Success)
+				Assert.Fail("Failed writing to my own queue");
+
+			var session1 = Login(uid1.NodeId, uid1.Id, passphrase);
+
+			if (!session1.Success)
+				Assert.Fail("Failed logging in");
+
+			var readResponse = ReadQueue(uid1.NodeId, uid1.Id, session1.SessionKey, uid0.NodeId, uid0.Id, "A", true);
+
+			if ((!readResponse.Success) || (readResponse.Messages.Count != 1) || (readResponse.Messages[0] != msg))
+				Assert.Fail("Failed reader message from queue");
+
+			readResponse = ReadQueue(uid1.NodeId, uid1.Id, session1.SessionKey, uid0.NodeId, uid0.Id, "A", true);
+
+			if ((!readResponse.Success) || (readResponse.Messages.Count != 0))
+				Assert.Fail("Commit on previous read failed");
+		}
+
+		[TestMethod()]
+		public void ReadQueueCommitReadOnOtherTest()
+		{
+			string passphrase = "Aa123456";
+			var msg = "Hello, world!";
+			var uid0 = RegisterNewUser(passphrase);
+
+			if ((!uid0.Success) || (uid0.Id != 0))
+				Assert.Fail("Unexpected result registering uid 0");
+
+			var uid1 = RegisterNewUser(passphrase);
+
+			if ((!uid1.Success) || (uid1.Id != 1))
+				Assert.Fail("Unexpected result registering uid 1");
+
+			var uid2 = RegisterNewUser(passphrase);
+
+			if ((!uid2.Success) || (uid2.Id != 2))
+				Assert.Fail("Unexpected result registering uid 2");
+
+			var session0 = Login(uid0.NodeId, uid0.Id, passphrase);
+
+			if (!session0.Success)
+				Assert.Fail("Failed logging in");
+
+			var newQueue = CreateQueue(uid0.NodeId, uid0.Id, session0.SessionKey, "A", new List<List<int>> { new List<int> { uid1.Id, uid1.NodeId }, new List<int> { uid2.Id, uid2.NodeId } });
+
+			if (!newQueue.Success)
+				Assert.Fail("Failed creating new queue");
+
+			var writeResponse = WriteQueue(uid0.NodeId, uid0.Id, session0.SessionKey, "A", msg);
+
+			if (!writeResponse.Success)
+				Assert.Fail("Failed writing to my own queue");
+
+			var session1 = Login(uid1.NodeId, uid1.Id, passphrase);
+
+			if (!session1.Success)
+				Assert.Fail("Failed logging in");
+
+			var readResponse = ReadQueue(uid1.NodeId, uid1.Id, session1.SessionKey, uid0.NodeId, uid0.Id, "A", true);
+
+			if ((!readResponse.Success) || (readResponse.Messages.Count != 1) || (readResponse.Messages[0] != msg))
+				Assert.Fail("Failed reade message from queue");
+
+			readResponse = ReadQueue(uid1.NodeId, uid1.Id, session1.SessionKey, uid0.NodeId, uid0.Id, "A", true);
+
+			if ((!readResponse.Success) || (readResponse.Messages.Count != 0))
+				Assert.Fail("Commit on previous read failed");
+
+			var session2 = Login(uid2.NodeId, uid2.Id, passphrase);
+
+			if (!session2.Success)
+				Assert.Fail("Failed logging in");
+
+			readResponse = ReadQueue(uid2.NodeId, uid2.Id, session2.SessionKey, uid0.NodeId, uid0.Id, "A", true);
+
+			if ((!readResponse.Success) || (readResponse.Messages.Count != 1) || (readResponse.Messages[0] != msg))
+				Assert.Fail("Failed reader message from queue");
 		}
 	}
 }
