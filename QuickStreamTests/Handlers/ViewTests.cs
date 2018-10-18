@@ -73,6 +73,16 @@ namespace QuickStream.Handlers.Tests
 		[TestInitialize()]
 		public void TestStart()
 		{
+			if (!File.Exists("DBDump.sqlite"))
+			{
+				File.Copy("..\\..\\DBDump.sqlite", "DBDump.sqlite");
+			}
+
+			if (!File.Exists("QuickStream.ini"))
+			{
+				File.Copy("..\\..\\QuickStream.ini", "QuickStream.ini");
+			}
+
 			VerifyGenerateCert();
 
 			ResetDB();

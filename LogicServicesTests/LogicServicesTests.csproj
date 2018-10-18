@@ -127,6 +127,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CertGen\CertGen.csproj">
+      <Project>{c282a064-53c8-4922-9e85-690a5615700a}</Project>
+      <Name>CertGen</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DAL\DAL.csproj">
       <Project>{fa1677af-1f65-4a6e-8189-4792f096fba2}</Project>
       <Name>DAL</Name>

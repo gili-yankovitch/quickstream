@@ -10,15 +10,50 @@ using System.Threading;
 using DAL;
 using System.Data.SQLite;
 using System.Data;
+using Google.Protobuf;
 
 namespace LogicServices.Tests
 {
 	[TestClass()]
 	public class QueueEngineTests
 	{
+		private void VerifyGenerateCert()
+		{
+			if (!File.Exists(Config<string>.GetInstance()["Certificate"]))
+			{
+				var pbMasterKeyPair = CertGen.Program.GenerateKeyPair();
+				var pbKeyPair = CertGen.Program.GenerateKeyPair();
+
+				var pbCertFile = new PBCertFile();
+
+				/* Copy public master key */
+				pbCertFile.MasterPublic = new PBPublicKey();
+				pbCertFile.MasterPublic.PublicKey = pbMasterKeyPair.PublicKey.PublicKey;
+				pbCertFile.Cert = CertGen.Program.SignCertificate(Config<string>.GetInstance()["Certificate"], pbMasterKeyPair, pbKeyPair);
+				pbCertFile.Keys = pbKeyPair;
+
+				using (var fs = File.Open(Config<string>.GetInstance()["Certificate"], FileMode.Create))
+				{
+					pbCertFile.WriteTo(fs);
+				}
+			}
+		}
+
 		[TestInitialize()]
 		public void InitializeTest()
 		{
+			if (!File.Exists("DBDump.sqlite"))
+			{
+				File.Copy("..\\..\\DBDump.sqlite", "DBDump.sqlite");
+			}
+
+			if (!File.Exists("QuickStream.ini"))
+			{
+				File.Copy("..\\..\\QuickStream.ini", "QuickStream.ini");
+			}
+
+			VerifyGenerateCert();
+
 			Config<long>.GetInstance()["TIMEZONE_CORRECTION"] = 0;
 
 			using (SQLiteConnection connect = new SQLiteConnection(@"Data Source=QuickStream.sqlite"))
